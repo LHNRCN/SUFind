@@ -27,6 +27,7 @@ const timetable = document.getElementById('timetable');
 const recommendBtn = document.getElementById('recommend-btn');
 const filterInput = document.getElementById('filter-input');
 const recList = document.getElementById('recommendations-list');
+const themeToggleBtn = document.getElementById('theme-toggle');
 
 // Modal Elements
 const modal = document.getElementById('section-modal');
@@ -37,6 +38,17 @@ const modalError = document.getElementById('modal-error-msg');
 const confirmBtn = document.getElementById('confirm-add-btn');
 
 let coursePendingAdd = null;
+
+// Dark Mode Toggle
+themeToggleBtn.addEventListener('click', () => {
+    document.body.classList.toggle('dark-mode');
+});
+
+// Random Pastel Color Generator for the Grid
+function getRandomPastelColor() {
+    const hue = Math.floor(Math.random() * 360);
+    return `hsl(${hue}, 70%, 85%)`;
+}
 
 function initTimetable() {
     for (let slot = 0; slot < 11; slot++) {
@@ -98,7 +110,6 @@ function updateExcludedUI() {
         let reason = '';
         let canRemove = false;
 
-        // Note: Taken courses are shown on the left pane, so we don't duplicate them here.
         if (manuallyExcludedSet.has(course.code)) {
             isExcluded = true;
             reason = 'Manually Excluded';
@@ -127,7 +138,6 @@ function updateExcludedUI() {
     }
 }
 
-// Checkbox Logic
 hideGradCheckbox.addEventListener('change', () => {
     populateDatalist();
     updateExcludedUI();
@@ -149,7 +159,6 @@ hideFreshmanCheckbox.addEventListener('change', (e) => {
     if (currentRecommendations.length > 0) recommendBtn.click();
 });
 
-// Taken Courses Logic
 addTakenBtn.addEventListener('click', () => {
     const val = takenSearch.value.trim().toUpperCase();
     const course = allCourses.find(c => val.startsWith(c.code.toUpperCase()));
@@ -179,7 +188,6 @@ window.removeTaken = function(code) {
     if (currentRecommendations.length > 0) recommendBtn.click();
 };
 
-// Excluded Courses Logic
 window.manuallyExclude = function(code) {
     manuallyExcludedSet.add(code);
     populateDatalist();
@@ -194,7 +202,6 @@ window.removeExcluded = function(code) {
     if (currentRecommendations.length > 0) recommendBtn.click();
 };
 
-// Schedule Conflict Logic
 function getOccupiedSlots(coursesArray) {
     let occupied = new Set();
     coursesArray.forEach(courseBundle => {
@@ -244,7 +251,6 @@ function getTypeName(typeCode) {
     return "Other";
 }
 
-// Modal Interaction
 addBtn.addEventListener('click', () => {
     errorMsg.textContent = '';
     const val = searchInput.value.trim().toUpperCase();
@@ -332,7 +338,8 @@ confirmBtn.addEventListener('click', () => {
 
     selectedCourses.push({
         code: coursePendingAdd.code,
-        sections: sectionsToAdd
+        sections: sectionsToAdd,
+        color: getRandomPastelColor() // Attach random color
     });
     
     searchInput.value = '';
@@ -352,6 +359,7 @@ function updateTimetableUI() {
             if(cell) {
                 cell.innerHTML = '';
                 cell.className = '';
+                cell.style.backgroundColor = '';
             }
         }
     }
@@ -364,6 +372,8 @@ function updateTimetableUI() {
                         const cell = document.getElementById(`cell-${sch.day}-${sch.start + i}`);
                         if (cell) {
                             cell.className = 'course-block';
+                            cell.style.backgroundColor = courseBundle.color;
+                            cell.style.color = '#000'; // Enforce contrast on pastel
                             cell.innerHTML = `
                                 <strong>${courseBundle.code}</strong>
                                 <span>${sec.displayType} (${sec.group})</span>
@@ -383,7 +393,6 @@ function removeCourse(index) {
     recList.innerHTML = '<p>Select courses and click "Recommend" to see non-conflicting options here.</p>';
 }
 
-// Recommendations logic
 let currentRecommendations = [];
 
 recommendBtn.addEventListener('click', () => {
