@@ -32,7 +32,7 @@ jobs:
       - name: Run Scraper
         # Updated to run the script inside the scraper folder.
         # Note: Ensure the Python file inside that folder is actually named 'scraper.py'. 
-        run: python scraper/scraper.py 202601 
+        run: python scraper/scrape.py 202601 
 
       - name: Commit and push if data changed
         run: |
