@@ -22,7 +22,7 @@ const modalContainer = document.getElementById('modal-sections-container');
 const modalError = document.getElementById('modal-error-msg');
 const confirmBtn = document.getElementById('confirm-add-btn');
 
-let coursePendingAdd = null; // Temporarily stores the course being configured in the modal
+let coursePendingAdd = null;
 
 // Initialize Timetable Grid
 function initTimetable() {
@@ -86,7 +86,6 @@ function hasConflict(candidateSchedule, currentOccupiedSet) {
     return false;
 }
 
-// Helper: Format schedule for dropdown display
 function formatSchedule(scheduleArray) {
     if (!scheduleArray || scheduleArray.length === 0) return "TBA";
     let formatted = scheduleArray.map(sch => {
@@ -99,7 +98,6 @@ function formatSchedule(scheduleArray) {
     return formatted.length > 0 ? formatted.join(', ') : "TBA";
 }
 
-// Helper: Convert internal type codes to readable text
 function getTypeName(typeCode) {
     if (typeCode === "") return "Lecture";
     if (typeCode === "R") return "Recitation";
@@ -130,12 +128,10 @@ addBtn.addEventListener('click', () => {
         return;
     }
 
-    // Build Modal UI
     modalTitle.textContent = `${coursePendingAdd.code} Sections`;
     modalContainer.innerHTML = '';
     modalError.textContent = '';
 
-    // Create a dropdown for each class type (Lecture, Recitation, etc.)
     coursePendingAdd.classes.forEach((cls, index) => {
         const typeName = getTypeName(cls.type);
         
@@ -147,11 +143,11 @@ addBtn.addEventListener('click', () => {
         
         const select = document.createElement('select');
         select.className = 'section-dropdown';
-        select.dataset.classIndex = index; // Store which class array this refers to
+        select.dataset.classIndex = index;
         
         cls.sections.forEach((sec, secIndex) => {
             const option = document.createElement('option');
-            option.value = secIndex; // Store the index of the section
+            option.value = secIndex;
             option.textContent = `Gr. ${sec.group} | ${formatSchedule(sec.schedule)}`;
             select.appendChild(option);
         });
@@ -161,7 +157,8 @@ addBtn.addEventListener('click', () => {
         modalContainer.appendChild(groupDiv);
     });
 
-    modal.style.display = 'block';
+    // Use flex display to center properly
+    modal.style.display = 'flex';
 });
 
 // --- Modal Confirm Button Logic ---
@@ -174,13 +171,11 @@ confirmBtn.addEventListener('click', () => {
 
     let currentOccupied = getOccupiedSlots(selectedCourses);
 
-    // Collect chosen sections and check for internal/external conflicts
     dropdowns.forEach(dropdown => {
         const classIndex = dropdown.dataset.classIndex;
         const sectionIndex = dropdown.value;
         const sec = coursePendingAdd.classes[classIndex].sections[sectionIndex];
         
-        // Tag the section with its type so we can display "Recitation" on the grid
         sec.displayType = getTypeName(coursePendingAdd.classes[classIndex].type);
         sectionsToAdd.push(sec);
 
@@ -188,13 +183,8 @@ confirmBtn.addEventListener('click', () => {
             if (sch.day >= 0 && sch.day <= 4 && sch.duration > 0) {
                 for (let i = 0; i < sch.duration; i++) {
                     const slotId = `${sch.day}-${sch.start + i}`;
-                    
-                    // Does it conflict with another selection in this same modal?
                     if (proposedOccupied.has(slotId)) internalConflict = true;
-                    
-                    // Does it conflict with the existing timetable?
                     if (currentOccupied.has(slotId)) externalConflict = true;
-                    
                     proposedOccupied.add(slotId);
                 }
             }
@@ -211,7 +201,6 @@ confirmBtn.addEventListener('click', () => {
         return;
     }
 
-    // Success: Add course bundle to timetable
     selectedCourses.push({
         code: coursePendingAdd.code,
         sections: sectionsToAdd
@@ -222,7 +211,6 @@ confirmBtn.addEventListener('click', () => {
     updateTimetableUI();
 });
 
-// Close Modal Events
 closeModal.onclick = () => modal.style.display = "none";
 window.onclick = (event) => { if (event.target == modal) modal.style.display = "none"; }
 
@@ -248,7 +236,6 @@ function updateTimetableUI() {
                         const cell = document.getElementById(`cell-${sch.day}-${sch.start + i}`);
                         if (cell) {
                             cell.className = 'course-block';
-                            // Show Course Code, Type (Lec/Rec), and Group Number
                             cell.innerHTML = `
                                 <strong>${courseBundle.code}</strong>
                                 <span>${sec.displayType} (${sec.group})</span>
