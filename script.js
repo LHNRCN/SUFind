@@ -81,17 +81,17 @@ function hasConflict(candidateSchedule, currentOccupiedSet) {
 
 addBtn.addEventListener('click', () => {
     errorMsg.textContent = '';
-
+    
     if (selectedSections.length >= MAX_COURSES) {
         errorMsg.textContent = "You can only select up to 5 courses.";
         return;
     }
 
     const val = searchInput.value.trim();
-
+    
     // Find the course whose code matches the beginning of the input
     const course = allCourses.find(c => val.startsWith(c.code));
-
+        
     if (!course) {
         errorMsg.textContent = "Course not found.";
         return;
@@ -99,7 +99,7 @@ addBtn.addEventListener('click', () => {
 
     // Grab the first section of the first class type for simplicity
     const sectionToadd = course.classes[0].sections[0];
-
+    
     // Check internal conflict before adding
     const currentOccupied = getOccupiedSlots(selectedSections);
     if (hasConflict(sectionToadd.schedule, currentOccupied)) {
@@ -108,22 +108,24 @@ addBtn.addEventListener('click', () => {
     }
 
     // Attach course code to the section object for easy rendering
-    sectionToadd.displayCode = course.code;
+    sectionToadd.displayCode = course.code; 
     selectedSections.push(sectionToadd);
-
+    
     searchInput.value = '';
     updateTimetableUI();
 });
 
 function updateTimetableUI() {
     countSpan.textContent = selectedSections.length;
-
+    
     // Clear timetable cells
-    for (let day = 0; day < 5; day++) {
-        for (let slot = 0; slot < 11; slot++) {
+    for(let day=0; day<5; day++) {
+        for(let slot=0; slot<11; slot++) {
             const cell = document.getElementById(`cell-${day}-${slot}`);
-            cell.innerHTML = '';
-            cell.className = '';
+            if(cell) {
+                cell.innerHTML = '';
+                cell.className = '';
+            }
         }
     }
 
@@ -165,7 +167,7 @@ recommendBtn.addEventListener('click', () => {
         if (selectedSections.some(s => s.displayCode === course.code)) return;
 
         let hasNonConflictingSection = false;
-
+        
         course.classes.forEach(cls => {
             cls.sections.forEach(sec => {
                 if (!hasConflict(sec.schedule, currentOccupied)) {
@@ -188,8 +190,8 @@ function renderRecommendations() {
     recList.innerHTML = '';
     const filterText = filterInput.value.trim().toLowerCase();
 
-    const filtered = currentRecommendations.filter(c =>
-        c.code.toLowerCase().includes(filterText) ||
+    const filtered = currentRecommendations.filter(c => 
+        c.code.toLowerCase().includes(filterText) || 
         c.name.toLowerCase().includes(filterText)
     );
 
