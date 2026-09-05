@@ -82,15 +82,19 @@ function hasConflict(candidateSchedule, currentOccupiedSet) {
 addBtn.addEventListener('click', () => {
     errorMsg.textContent = '';
     
+    addBtn.addEventListener('click', () => {
+    errorMsg.textContent = '';
+    
     if (selectedSections.length >= MAX_COURSES) {
         errorMsg.textContent = "You can only select up to 5 courses.";
         return;
     }
 
-    const val = searchInput.value;
-    const courseCode = val.split(' ')[0]; // Extract code (e.g. "CS")
+    const val = searchInput.value.trim();
     
-    const course = allCourses.find(c => c.code === courseCode);
+    // Instead of splitting by space, find the course whose code matches the beginning of the input
+    const course = allCourses.find(c => val.startsWith(c.code));
+        
     if (!course) {
         errorMsg.textContent = "Course not found.";
         return;
