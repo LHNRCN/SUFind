@@ -26,11 +26,13 @@ jobs:
           python-version: '3.x'
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        # Updated to point inside the scraper folder
+        run: pip install -r scraper/requirements.txt
 
       - name: Run Scraper
-        # IMPORTANT: Change 202601 to your target term code
-        run: python scraper.py 202601 
+        # Updated to run the script inside the scraper folder.
+        # Note: Ensure the Python file inside that folder is actually named 'scraper.py'. 
+        run: python scraper/scraper.py 202601 
 
       - name: Commit and push if data changed
         run: |
