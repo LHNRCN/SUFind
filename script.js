@@ -1,6 +1,7 @@
 let allCourses = [];
-let selectedSections = []; // Will store up to 5 section objects
+let selectedCourses = []; // Stores up to 5 course bundles
 const MAX_COURSES = 5;
+const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
 
 // DOM Elements
 const searchInput = document.getElementById('course-search');
@@ -13,16 +14,24 @@ const recommendBtn = document.getElementById('recommend-btn');
 const filterInput = document.getElementById('filter-input');
 const recList = document.getElementById('recommendations-list');
 
-// Initialize Timetable Grid (11 slots, Mon-Fri)
+// Modal Elements
+const modal = document.getElementById('section-modal');
+const closeModal = document.getElementById('close-modal');
+const modalTitle = document.getElementById('modal-course-title');
+const modalContainer = document.getElementById('modal-sections-container');
+const modalError = document.getElementById('modal-error-msg');
+const confirmBtn = document.getElementById('confirm-add-btn');
+
+let coursePendingAdd = null; // Temporarily stores the course being configured in the modal
+
+// Initialize Timetable Grid
 function initTimetable() {
     for (let slot = 0; slot < 11; slot++) {
-        // Add time label
         const timeLabel = document.createElement('div');
         timeLabel.className = 'time-label';
         timeLabel.textContent = `Slot ${slot}`;
         timetable.appendChild(timeLabel);
 
-        // Add 5 empty cells for Mon-Fri
         for (let day = 0; day < 5; day++) {
             const cell = document.createElement('div');
             cell.id = `cell-${day}-${slot}`;
@@ -48,17 +57,17 @@ function populateDatalist() {
 }
 
 // --- Schedule Conflict Logic ---
-
-function getOccupiedSlots(sectionsArray) {
+function getOccupiedSlots(coursesArray) {
     let occupied = new Set();
-    sectionsArray.forEach(sec => {
-        sec.schedule.forEach(sch => {
-            // Check if valid day (0-4 is Mon-Fri) and valid duration
-            if (sch.day >= 0 && sch.day <= 4 && sch.duration > 0) {
-                for (let i = 0; i < sch.duration; i++) {
-                    occupied.add(`${sch.day}-${sch.start + i}`);
+    coursesArray.forEach(courseBundle => {
+        courseBundle.sections.forEach(sec => {
+            sec.schedule.forEach(sch => {
+                if (sch.day >= 0 && sch.day <= 4 && sch.duration > 0) {
+                    for (let i = 0; i < sch.duration; i++) {
+                        occupied.add(`${sch.day}-${sch.start + i}`);
+                    }
                 }
-            }
+            });
         });
     });
     return occupied;
@@ -69,7 +78,7 @@ function hasConflict(candidateSchedule, currentOccupiedSet) {
         if (sch.day >= 0 && sch.day <= 4 && sch.duration > 0) {
             for (let i = 0; i < sch.duration; i++) {
                 if (currentOccupiedSet.has(`${sch.day}-${sch.start + i}`)) {
-                    return true; // Conflict found
+                    return true;
                 }
             }
         }
@@ -77,48 +86,150 @@ function hasConflict(candidateSchedule, currentOccupiedSet) {
     return false;
 }
 
-// --- Adding and Rendering Courses ---
+// Helper: Format schedule for dropdown display
+function formatSchedule(scheduleArray) {
+    if (!scheduleArray || scheduleArray.length === 0) return "TBA";
+    let formatted = scheduleArray.map(sch => {
+        if (sch.day >= 0 && sch.day <= 4 && sch.duration > 0) {
+            return `${DAYS[sch.day]} Slot ${sch.start}-${sch.start + sch.duration - 1}`;
+        }
+        return "";
+    }).filter(s => s !== "");
+    
+    return formatted.length > 0 ? formatted.join(', ') : "TBA";
+}
 
+// Helper: Convert internal type codes to readable text
+function getTypeName(typeCode) {
+    if (typeCode === "") return "Lecture";
+    if (typeCode === "R") return "Recitation";
+    if (typeCode === "L") return "Lab";
+    if (typeCode === "D") return "Discussion";
+    return "Other";
+}
+
+// --- Initiating Course Add (Opening Modal) ---
 addBtn.addEventListener('click', () => {
     errorMsg.textContent = '';
     
-    if (selectedSections.length >= MAX_COURSES) {
+    if (selectedCourses.length >= MAX_COURSES) {
         errorMsg.textContent = "You can only select up to 5 courses.";
         return;
     }
 
     const val = searchInput.value.trim();
-    
-    // Find the course whose code matches the beginning of the input
-    const course = allCourses.find(c => val.startsWith(c.code));
+    coursePendingAdd = allCourses.find(c => val.startsWith(c.code));
         
-    if (!course) {
-        errorMsg.textContent = "Course not found.";
+    if (!coursePendingAdd) {
+        errorMsg.textContent = "Course not found. Please select from the dropdown.";
         return;
     }
 
-    // Grab the first section of the first class type for simplicity
-    const sectionToadd = course.classes[0].sections[0];
+    if (selectedCourses.some(c => c.code === coursePendingAdd.code)) {
+        errorMsg.textContent = "Course already added to timetable.";
+        return;
+    }
+
+    // Build Modal UI
+    modalTitle.textContent = `${coursePendingAdd.code} Sections`;
+    modalContainer.innerHTML = '';
+    modalError.textContent = '';
+
+    // Create a dropdown for each class type (Lecture, Recitation, etc.)
+    coursePendingAdd.classes.forEach((cls, index) => {
+        const typeName = getTypeName(cls.type);
+        
+        const groupDiv = document.createElement('div');
+        groupDiv.className = 'section-group';
+        
+        const label = document.createElement('label');
+        label.textContent = `Select ${typeName}:`;
+        
+        const select = document.createElement('select');
+        select.className = 'section-dropdown';
+        select.dataset.classIndex = index; // Store which class array this refers to
+        
+        cls.sections.forEach((sec, secIndex) => {
+            const option = document.createElement('option');
+            option.value = secIndex; // Store the index of the section
+            option.textContent = `Gr. ${sec.group} | ${formatSchedule(sec.schedule)}`;
+            select.appendChild(option);
+        });
+
+        groupDiv.appendChild(label);
+        groupDiv.appendChild(select);
+        modalContainer.appendChild(groupDiv);
+    });
+
+    modal.style.display = 'block';
+});
+
+// --- Modal Confirm Button Logic ---
+confirmBtn.addEventListener('click', () => {
+    const dropdowns = document.querySelectorAll('.section-dropdown');
+    let sectionsToAdd = [];
+    let proposedOccupied = new Set();
+    let internalConflict = false;
+    let externalConflict = false;
+
+    let currentOccupied = getOccupiedSlots(selectedCourses);
+
+    // Collect chosen sections and check for internal/external conflicts
+    dropdowns.forEach(dropdown => {
+        const classIndex = dropdown.dataset.classIndex;
+        const sectionIndex = dropdown.value;
+        const sec = coursePendingAdd.classes[classIndex].sections[sectionIndex];
+        
+        // Tag the section with its type so we can display "Recitation" on the grid
+        sec.displayType = getTypeName(coursePendingAdd.classes[classIndex].type);
+        sectionsToAdd.push(sec);
+
+        sec.schedule.forEach(sch => {
+            if (sch.day >= 0 && sch.day <= 4 && sch.duration > 0) {
+                for (let i = 0; i < sch.duration; i++) {
+                    const slotId = `${sch.day}-${sch.start + i}`;
+                    
+                    // Does it conflict with another selection in this same modal?
+                    if (proposedOccupied.has(slotId)) internalConflict = true;
+                    
+                    // Does it conflict with the existing timetable?
+                    if (currentOccupied.has(slotId)) externalConflict = true;
+                    
+                    proposedOccupied.add(slotId);
+                }
+            }
+        });
+    });
+
+    if (internalConflict) {
+        modalError.textContent = "Error: The sections you selected conflict with each other.";
+        return;
+    }
     
-    // Check internal conflict before adding
-    const currentOccupied = getOccupiedSlots(selectedSections);
-    if (hasConflict(sectionToadd.schedule, currentOccupied)) {
-        errorMsg.textContent = "This course conflicts with your timetable!";
+    if (externalConflict) {
+        modalError.textContent = "Error: A selected section conflicts with your current timetable.";
         return;
     }
 
-    // Attach course code to the section object for easy rendering
-    sectionToadd.displayCode = course.code; 
-    selectedSections.push(sectionToadd);
+    // Success: Add course bundle to timetable
+    selectedCourses.push({
+        code: coursePendingAdd.code,
+        sections: sectionsToAdd
+    });
     
     searchInput.value = '';
+    modal.style.display = 'none';
     updateTimetableUI();
 });
 
+// Close Modal Events
+closeModal.onclick = () => modal.style.display = "none";
+window.onclick = (event) => { if (event.target == modal) modal.style.display = "none"; }
+
+// --- Updating the UI Grid ---
 function updateTimetableUI() {
-    countSpan.textContent = selectedSections.length;
+    countSpan.textContent = selectedCourses.length;
     
-    // Clear timetable cells
     for(let day=0; day<5; day++) {
         for(let slot=0; slot<11; slot++) {
             const cell = document.getElementById(`cell-${day}-${slot}`);
@@ -129,54 +240,60 @@ function updateTimetableUI() {
         }
     }
 
-    // Draw selected courses
-    selectedSections.forEach((sec, index) => {
-        sec.schedule.forEach(sch => {
-            if (sch.day >= 0 && sch.day <= 4 && sch.duration > 0) {
-                for (let i = 0; i < sch.duration; i++) {
-                    const cell = document.getElementById(`cell-${sch.day}-${sch.start + i}`);
-                    if (cell) {
-                        cell.className = 'course-block';
-                        cell.innerHTML = `<span>${sec.displayCode}</span>`;
-                        // Click to remove
-                        cell.onclick = () => removeCourse(index);
+    selectedCourses.forEach((courseBundle, index) => {
+        courseBundle.sections.forEach(sec => {
+            sec.schedule.forEach(sch => {
+                if (sch.day >= 0 && sch.day <= 4 && sch.duration > 0) {
+                    for (let i = 0; i < sch.duration; i++) {
+                        const cell = document.getElementById(`cell-${sch.day}-${sch.start + i}`);
+                        if (cell) {
+                            cell.className = 'course-block';
+                            // Show Course Code, Type (Lec/Rec), and Group Number
+                            cell.innerHTML = `
+                                <strong>${courseBundle.code}</strong>
+                                <span>${sec.displayType} (${sec.group})</span>
+                            `;
+                            cell.onclick = () => removeCourse(index);
+                        }
                     }
                 }
-            }
+            });
         });
     });
 }
 
 function removeCourse(index) {
-    selectedSections.splice(index, 1);
+    selectedCourses.splice(index, 1);
     updateTimetableUI();
-    recList.innerHTML = '<p>Select courses and click "Recommend" to see non-conflicting options here.</p>'; // Reset recommendations
+    recList.innerHTML = '<p>Select courses and click "Recommend" to see non-conflicting options here.</p>';
 }
 
 // --- Recommendations and Filtering ---
-
 let currentRecommendations = [];
 
 recommendBtn.addEventListener('click', () => {
-    const currentOccupied = getOccupiedSlots(selectedSections);
     currentRecommendations = [];
 
-    // Look for courses where at least ONE section doesn't conflict
     allCourses.forEach(course => {
-        // Skip if already in timetable
-        if (selectedSections.some(s => s.displayCode === course.code)) return;
+        if (selectedCourses.some(c => c.code === course.code)) return;
 
-        let hasNonConflictingSection = false;
-        
+        let currentOccupied = getOccupiedSlots(selectedCourses);
+        let canFitAllTypes = true;
+
         course.classes.forEach(cls => {
-            cls.sections.forEach(sec => {
+            let hasValidSecForType = false;
+            for (let sec of cls.sections) {
                 if (!hasConflict(sec.schedule, currentOccupied)) {
-                    hasNonConflictingSection = true;
+                    hasValidSecForType = true;
+                    break;
                 }
-            });
+            }
+            if (!hasValidSecForType) {
+                canFitAllTypes = false;
+            }
         });
 
-        if (hasNonConflictingSection) {
+        if (canFitAllTypes) {
             currentRecommendations.push(course);
         }
     });
@@ -211,5 +328,4 @@ function renderRecommendations() {
     });
 }
 
-// Init layout
 initTimetable();
