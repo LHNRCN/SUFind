@@ -1,6 +1,5 @@
 let allCourses = [];
-let selectedCourses = []; // Stores up to 5 course bundles
-const MAX_COURSES = 6;
+let selectedCourses = []; // Stores selected course bundles
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
 
 // DOM Elements
@@ -40,11 +39,17 @@ function initTimetable() {
     }
 }
 
-// Fetch Data
+// Fetch Data and Filter out Graduate Courses (>= 5xx)
 fetch('data.min.json')
     .then(response => response.json())
     .then(data => {
-        allCourses = data.courses;
+        allCourses = data.courses.filter(course => {
+            const parts = course.code.split(' ');
+            if (parts.length < 2) return true;
+            const numPart = parts[1];
+            const level = parseInt(numPart.substring(0, 3), 10);
+            return level < 500; // Keep only undergraduate courses (< 500)
+        });
         populateDatalist();
     });
 
@@ -109,11 +114,6 @@ function getTypeName(typeCode) {
 // --- Initiating Course Add (Opening Modal) ---
 addBtn.addEventListener('click', () => {
     errorMsg.textContent = '';
-    
-    if (selectedCourses.length >= MAX_COURSES) {
-        errorMsg.textContent = "You can only select up to 5 courses.";
-        return;
-    }
 
     const val = searchInput.value.trim();
     coursePendingAdd = allCourses.find(c => val.startsWith(c.code));
@@ -157,7 +157,6 @@ addBtn.addEventListener('click', () => {
         modalContainer.appendChild(groupDiv);
     });
 
-    // Use flex display to center properly
     modal.style.display = 'flex';
 });
 
