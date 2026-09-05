@@ -10,8 +10,23 @@
     <div class="container">
         <!-- Left Pane: Timetable and Selection -->
         <div class="left-pane">
-            <h2>My Timetable</h2>
             
+            <!-- Top Controls: Taken Courses & Filters -->
+            <div class="top-controls">
+                <div class="selection-area">
+                    <input type="text" id="taken-search" placeholder="Mark course as taken (e.g. IF 100)" list="course-list">
+                    <button id="add-taken-btn" class="secondary-btn">Mark Taken</button>
+                </div>
+                <div id="taken-list" class="tags-container"></div>
+                
+                <div class="filter-toggle-area">
+                    <label><input type="checkbox" id="hide-grad-cb" checked> Hide Graduate Courses (5xx+)</label>
+                </div>
+            </div>
+
+            <hr>
+
+            <h2>My Timetable</h2>
             <div class="selection-area">
                 <input type="text" id="course-search" placeholder="Search course (e.g. CS 201)" list="course-list">
                 <datalist id="course-list"></datalist>
@@ -50,9 +65,7 @@
         <div class="modal-content">
             <span class="close-btn" id="close-modal">&times;</span>
             <h3 id="modal-course-title">Select Sections</h3>
-            <div id="modal-sections-container">
-                <!-- Dropdowns injected here via JS -->
-            </div>
+            <div id="modal-sections-container"></div>
             <p id="modal-error-msg" class="error-msg"></p>
             <button id="confirm-add-btn" class="primary-btn" style="width: 100%;">Add to Timetable</button>
         </div>

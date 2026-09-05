@@ -27,19 +27,13 @@ body {
     flex-direction: column;
 }
 
-.left-pane {
-    flex: 2;
-}
-
-.right-pane {
-    flex: 1;
-    overflow-y: auto;
-}
+.left-pane { flex: 2; }
+.right-pane { flex: 1; overflow-y: auto; }
 
 .selection-area, .filter-area {
     display: flex;
     gap: 10px;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     align-items: center;
 }
 
@@ -60,9 +54,10 @@ button {
     font-weight: bold;
 }
 
-button:hover {
-    background-color: #004494;
-}
+button:hover { background-color: #004494; }
+
+.secondary-btn { background-color: #6c757d; }
+.secondary-btn:hover { background-color: #5a6268; }
 
 .primary-btn {
     margin-top: 20px;
@@ -70,10 +65,7 @@ button:hover {
     font-size: 16px;
     background-color: #28a745;
 }
-
-.primary-btn:hover {
-    background-color: #218838;
-}
+.primary-btn:hover { background-color: #218838; }
 
 .error-msg {
     color: red;
@@ -81,10 +73,46 @@ button:hover {
     margin: 0;
 }
 
+hr {
+    border: 0;
+    height: 1px;
+    background: #eee;
+    margin: 15px 0 20px 0;
+}
+
+/* Tags / Taken Courses */
+.tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+.taken-tag {
+    background-color: #e2e3e5;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.remove-tag {
+    cursor: pointer;
+    color: #888;
+    font-weight: bold;
+}
+.remove-tag:hover { color: red; }
+
+.filter-toggle-area {
+    margin-top: 5px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
 /* Timetable Grid */
 .timetable {
     display: grid;
-    grid-template-columns: 80px repeat(5, 1fr);
+    grid-template-columns: 100px repeat(5, 1fr);
     grid-template-rows: 40px repeat(11, 50px);
     gap: 1px;
     background-color: #ddd;
@@ -128,27 +156,21 @@ button:hover {
     color: red;
 }
 
-.course-block strong {
-    font-size: 12px;
-}
+.course-block strong { font-size: 12px; }
 
 /* Recommendations */
 .rec-item {
     padding: 12px;
     border-bottom: 1px solid #eee;
 }
-
-.rec-item h4 {
-    margin: 0 0 5px 0;
-}
-
+.rec-item h4 { margin: 0 0 5px 0; }
 .rec-item p {
     margin: 0;
     font-size: 14px;
     color: #666;
 }
 
-/* --- Modal Styles --- */
+/* Modal */
 .modal {
     display: none; 
     position: fixed; 
@@ -182,22 +204,15 @@ button:hover {
     cursor: pointer;
     line-height: 1;
 }
+.close-btn:hover { color: black; }
 
-.close-btn:hover {
-    color: black;
-}
-
-.section-group {
-    margin-bottom: 15px;
-}
-
+.section-group { margin-bottom: 15px; }
 .section-group label {
     display: block;
     font-weight: bold;
     margin-bottom: 5px;
     color: #444;
 }
-
 .section-dropdown {
     width: 100%;
     padding: 8px;
