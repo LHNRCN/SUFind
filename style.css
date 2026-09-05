@@ -85,150 +85,6 @@ button:hover {
 .timetable {
     display: grid;
     grid-template-columns: 80px repeat(5, 1fr);
-    grid-template-rows: 40px repeat(11, 50px); /* 11 time slots */
-    gap: 1px;
-    background-color: #ddd;
-    border: 1px solid #ccc;
-    flex-grow: 1;
-}
-
-.timetable > div {
-    background-color: #fff;
-    padding: 5px;
-    font-size: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-}
-
-.time-header, .day-header {
-    background-color: #eee !important;
-    font-weight: bold;
-}
-
-.time-label {
-    background-color: #f9f9f9 !important;
-    font-weight: bold;
-}
-
-.course-block {
-    background-color: #cce5ff !important;
-    border: 1px solid #b8daff;
-    border-radius: 4px;
-    color: #004085;
-    font-weight: bold;
-    flex-direction: column;
-    cursor: pointer;
-}
-
-.course-block:hover {
-    background-color: #ffcccc !important;
-    color: red;
-}
-
-/* Recommendations */
-.rec-item {
-    padding: 12px;
-    border-bottom: 1px solid #eee;
-}
-
-.rec-item h4 {
-    margin: 0 0 5px 0;
-}
-
-.rec-item p {
-    margin: 0;
-    font-size: 14px;
-    color: #666;
-}
-* {
-    box-sizing: border-box;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-}
-
-body {
-    margin: 0;
-    padding: 20px;
-    background-color: #f4f7f6;
-    color: #333;
-}
-
-.container {
-    display: flex;
-    gap: 20px;
-    max-width: 1400px;
-    margin: 0 auto;
-    height: 90vh;
-}
-
-.left-pane, .right-pane {
-    background: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    display: flex;
-    flex-direction: column;
-}
-
-.left-pane {
-    flex: 2;
-}
-
-.right-pane {
-    flex: 1;
-    overflow-y: auto;
-}
-
-.selection-area, .filter-area {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-    align-items: center;
-}
-
-input[type="text"] {
-    padding: 10px;
-    flex: 1;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
-
-button {
-    padding: 10px 15px;
-    background-color: #0056b3;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: bold;
-}
-
-button:hover {
-    background-color: #004494;
-}
-
-.primary-btn {
-    margin-top: 20px;
-    padding: 15px;
-    font-size: 16px;
-    background-color: #28a745;
-}
-
-.primary-btn:hover {
-    background-color: #218838;
-}
-
-.error-msg {
-    color: red;
-    font-size: 0.9em;
-    margin: 0;
-}
-
-/* Timetable Grid */
-.timetable {
-    display: grid;
-    grid-template-columns: 80px repeat(5, 1fr);
     grid-template-rows: 40px repeat(11, 50px);
     gap: 1px;
     background-color: #ddd;
@@ -299,19 +155,23 @@ button:hover {
     z-index: 1000; 
     left: 0;
     top: 0;
-    width: 100%; 
-    height: 100%; 
+    width: 100vw; 
+    height: 100vh; 
     background-color: rgba(0,0,0,0.5); 
+    align-items: center;
+    justify-content: center;
+    overflow-y: auto;
 }
 
 .modal-content {
     background-color: #fff;
-    margin: 10% auto;
     padding: 25px;
     border-radius: 8px;
     width: 450px;
     max-width: 90%;
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    position: relative;
+    margin: auto;
 }
 
 .close-btn {
