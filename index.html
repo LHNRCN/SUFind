@@ -8,17 +8,19 @@
 </head>
 <body>
     <div class="container">
+        <!-- Left Pane: Timetable and Selection -->
         <div class="left-pane">
             <h2>My Timetable</h2>
             
             <div class="selection-area">
                 <input type="text" id="course-search" placeholder="Search course (e.g. CS 201)" list="course-list">
                 <datalist id="course-list"></datalist>
-                <button id="add-course-btn">Add Course</button>
+                <button id="add-course-btn">Select Sections</button>
                 <p class="error-msg" id="error-msg"></p>
                 <p>Selected: <span id="course-count">0</span>/5</p>
             </div>
 
+            <!-- Timetable Grid -->
             <div class="timetable" id="timetable">
                 <div class="time-header">Time / Day</div>
                 <div class="day-header">Mon</div>
@@ -26,11 +28,12 @@
                 <div class="day-header">Wed</div>
                 <div class="day-header">Thu</div>
                 <div class="day-header">Fri</div>
-                </div>
+            </div>
             
             <button id="recommend-btn" class="primary-btn">Recommend Non-Conflicting Courses</button>
         </div>
 
+        <!-- Right Pane: Recommendations -->
         <div class="right-pane">
             <h2>Recommended Courses</h2>
             <div class="filter-area">
@@ -41,6 +44,20 @@
             </div>
         </div>
     </div>
+
+    <!-- Section Selection Modal -->
+    <div id="section-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="close-modal">&times;</span>
+            <h3 id="modal-course-title">Select Sections</h3>
+            <div id="modal-sections-container">
+                <!-- Dropdowns injected here via JS -->
+            </div>
+            <p id="modal-error-msg" class="error-msg"></p>
+            <button id="confirm-add-btn" class="primary-btn" style="width: 100%;">Add to Timetable</button>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
