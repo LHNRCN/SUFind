@@ -1,6 +1,7 @@
 let allCourses = [];
 let selectedCourses = []; 
 let takenCoursesSet = new Set(); 
+let manuallyExcludedSet = new Set(); 
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
 const TIMES = [
@@ -52,7 +53,6 @@ function initTimetable() {
     }
 }
 
-// Fixed Fetch: Store everything entirely, filter only on UI render
 fetch('data.min.json')
     .then(response => response.json())
     .then(data => {
@@ -61,28 +61,26 @@ fetch('data.min.json')
         updateExcludedUI();
     });
 
-// Check course levels dynamically
 function isGradCourse(courseCode) {
     const parts = courseCode.split(' ');
     if (parts.length < 2) return false;
-    return parseInt(parts[1][0], 10) >= 5; // e.g. 500, 58012
+    return parseInt(parts[1][0], 10) >= 5; 
 }
 
 function isFreshmanCourse(courseCode) {
     const parts = courseCode.split(' ');
     if (parts.length < 2) return false;
-    return parseInt(parts[1][0], 10) === 1; // e.g. 101, 102
+    return parseInt(parts[1][0], 10) === 1; 
 }
 
 function populateDatalist() {
     datalist.innerHTML = '';
     const hideGrad = hideGradCheckbox.checked;
-    const hideFresh = hideFreshmanCheckbox.checked;
 
     allCourses.forEach(course => {
         if (hideGrad && isGradCourse(course.code)) return;
-        if (hideFresh && isFreshmanCourse(course.code)) return;
         if (takenCoursesSet.has(course.code)) return; 
+        if (manuallyExcludedSet.has(course.code)) return;
 
         const option = document.createElement('option');
         option.value = `${course.code} ${course.name}`;
@@ -92,31 +90,34 @@ function populateDatalist() {
 
 function updateExcludedUI() {
     const hideGrad = hideGradCheckbox.checked;
-    const hideFresh = hideFreshmanCheckbox.checked;
-
     excludedList.innerHTML = '';
     let excludedCount = 0;
 
     allCourses.forEach(course => {
         let isExcluded = false;
         let reason = '';
+        let canRemove = false;
 
-        if (takenCoursesSet.has(course.code)) {
+        // Note: Taken courses are shown on the left pane, so we don't duplicate them here.
+        if (manuallyExcludedSet.has(course.code)) {
             isExcluded = true;
-            reason = 'Taken';
+            reason = 'Manually Excluded';
+            canRemove = true;
         } else if (hideGrad && isGradCourse(course.code)) {
             isExcluded = true;
             reason = 'Grad Level';
-        } else if (hideFresh && isFreshmanCourse(course.code)) {
-            isExcluded = true;
-            reason = 'Freshman Level';
-        }
+        } 
 
         if (isExcluded) {
             excludedCount++;
             const span = document.createElement('span');
             span.className = 'excluded-tag';
-            span.innerHTML = `<strong>${course.code}</strong>&nbsp;(${reason})`;
+            
+            if (canRemove) {
+                span.innerHTML = `<strong>${course.code}</strong>&nbsp;(${reason}) <span class="remove-tag" onclick="removeExcluded('${course.code}')" style="margin-left:5px;">&times;</span>`;
+            } else {
+                span.innerHTML = `<strong>${course.code}</strong>&nbsp;(${reason})`;
+            }
             excludedList.appendChild(span);
         }
     });
@@ -126,18 +127,29 @@ function updateExcludedUI() {
     }
 }
 
+// Checkbox Logic
 hideGradCheckbox.addEventListener('change', () => {
     populateDatalist();
     updateExcludedUI();
     if (currentRecommendations.length > 0) recommendBtn.click();
 });
 
-hideFreshmanCheckbox.addEventListener('change', () => {
+hideFreshmanCheckbox.addEventListener('change', (e) => {
+    if (e.target.checked) {
+        allCourses.forEach(c => {
+            if (isFreshmanCourse(c.code)) takenCoursesSet.add(c.code);
+        });
+    } else {
+        allCourses.forEach(c => {
+            if (isFreshmanCourse(c.code)) takenCoursesSet.delete(c.code);
+        });
+    }
+    renderTakenCourses();
     populateDatalist();
-    updateExcludedUI();
     if (currentRecommendations.length > 0) recommendBtn.click();
 });
 
+// Taken Courses Logic
 addTakenBtn.addEventListener('click', () => {
     const val = takenSearch.value.trim().toUpperCase();
     const course = allCourses.find(c => val.startsWith(c.code.toUpperCase()));
@@ -147,7 +159,6 @@ addTakenBtn.addEventListener('click', () => {
         takenSearch.value = '';
         renderTakenCourses();
         populateDatalist();
-        updateExcludedUI();
     }
 });
 
@@ -165,10 +176,25 @@ window.removeTaken = function(code) {
     takenCoursesSet.delete(code);
     renderTakenCourses();
     populateDatalist();
+    if (currentRecommendations.length > 0) recommendBtn.click();
+};
+
+// Excluded Courses Logic
+window.manuallyExclude = function(code) {
+    manuallyExcludedSet.add(code);
+    populateDatalist();
+    updateExcludedUI();
+    recommendBtn.click();
+};
+
+window.removeExcluded = function(code) {
+    manuallyExcludedSet.delete(code);
+    populateDatalist();
     updateExcludedUI();
     if (currentRecommendations.length > 0) recommendBtn.click();
 };
 
+// Schedule Conflict Logic
 function getOccupiedSlots(coursesArray) {
     let occupied = new Set();
     coursesArray.forEach(courseBundle => {
@@ -218,6 +244,7 @@ function getTypeName(typeCode) {
     return "Other";
 }
 
+// Modal Interaction
 addBtn.addEventListener('click', () => {
     errorMsg.textContent = '';
     const val = searchInput.value.trim().toUpperCase();
@@ -356,17 +383,17 @@ function removeCourse(index) {
     recList.innerHTML = '<p>Select courses and click "Recommend" to see non-conflicting options here.</p>';
 }
 
+// Recommendations logic
 let currentRecommendations = [];
 
 recommendBtn.addEventListener('click', () => {
     currentRecommendations = [];
     const hideGrad = hideGradCheckbox.checked;
-    const hideFresh = hideFreshmanCheckbox.checked;
 
     allCourses.forEach(course => {
         if (hideGrad && isGradCourse(course.code)) return;
-        if (hideFresh && isFreshmanCourse(course.code)) return;
         if (takenCoursesSet.has(course.code)) return;
+        if (manuallyExcludedSet.has(course.code)) return;
         if (selectedCourses.some(c => c.code === course.code)) return;
 
         let currentOccupied = getOccupiedSlots(selectedCourses);
@@ -410,9 +437,16 @@ function renderRecommendations() {
     filtered.forEach(course => {
         const div = document.createElement('div');
         div.className = 'rec-item';
+        div.style.display = 'flex';
+        div.style.justifyContent = 'space-between';
+        div.style.alignItems = 'center';
+        
         div.innerHTML = `
-            <h4>${course.code}</h4>
-            <p>${course.name}</p>
+            <div>
+                <h4>${course.code}</h4>
+                <p>${course.name}</p>
+            </div>
+            <button class="exclude-btn" onclick="manuallyExclude('${course.code}')">Exclude</button>
         `;
         recList.appendChild(div);
     });

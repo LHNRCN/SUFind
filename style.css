@@ -246,3 +246,17 @@ hr {
     display: inline-flex;
     align-items: center;
 }
+
+.exclude-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+.exclude-btn:hover {
+    background-color: #c82333;
+}
