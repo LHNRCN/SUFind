@@ -21,6 +21,7 @@
                 
                 <div class="filter-toggle-area">
                     <label><input type="checkbox" id="hide-grad-cb" checked> Hide Graduate Courses (5xx+)</label>
+                    <label><input type="checkbox" id="hide-freshman-cb"> Hide Freshman Courses (1xx)</label>
                 </div>
             </div>
 
@@ -48,8 +49,16 @@
             <button id="recommend-btn" class="primary-btn">Recommend Non-Conflicting Courses</button>
         </div>
 
-        <!-- Right Pane: Recommendations -->
+        <!-- Right Pane: Recommendations & Excluded -->
         <div class="right-pane">
+            
+            <div class="excluded-section">
+                <h3 style="margin-top: 0;">Explicitly Excluded</h3>
+                <div id="excluded-list" class="tags-container" style="max-height: 120px; overflow-y: auto;">
+                    <p class="empty-msg" style="margin:0; font-size:13px; color:#777;">No courses excluded.</p>
+                </div>
+            </div>
+
             <h2>Recommended Courses</h2>
             <div class="filter-area">
                 <input type="text" id="filter-input" placeholder="Filter by code (e.g. MATH)">

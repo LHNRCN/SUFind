@@ -1,6 +1,6 @@
 let allCourses = [];
 let selectedCourses = []; 
-let takenCoursesSet = new Set(); // Store completed courses
+let takenCoursesSet = new Set(); 
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
 const TIMES = [
@@ -17,7 +17,9 @@ const datalist = document.getElementById('course-list');
 const addBtn = document.getElementById('add-course-btn');
 const addTakenBtn = document.getElementById('add-taken-btn');
 const takenList = document.getElementById('taken-list');
+const excludedList = document.getElementById('excluded-list');
 const hideGradCheckbox = document.getElementById('hide-grad-cb');
+const hideFreshmanCheckbox = document.getElementById('hide-freshman-cb');
 const errorMsg = document.getElementById('error-msg');
 const countSpan = document.getElementById('course-count');
 const timetable = document.getElementById('timetable');
@@ -35,7 +37,6 @@ const confirmBtn = document.getElementById('confirm-add-btn');
 
 let coursePendingAdd = null;
 
-// Initialize Timetable Grid with Exact Hours
 function initTimetable() {
     for (let slot = 0; slot < 11; slot++) {
         const timeLabel = document.createElement('div');
@@ -51,42 +52,92 @@ function initTimetable() {
     }
 }
 
-// Fetch Data
+// Fixed Fetch: Store everything entirely, filter only on UI render
 fetch('data.min.json')
     .then(response => response.json())
     .then(data => {
-        allCourses = data.courses; // Store everything
+        allCourses = data.courses; 
         populateDatalist();
+        updateExcludedUI();
     });
 
-// Check if a course is a graduate course by analyzing the first digit of the code
+// Check course levels dynamically
 function isGradCourse(courseCode) {
     const parts = courseCode.split(' ');
     if (parts.length < 2) return false;
-    const numPart = parts[1];
-    return parseInt(numPart[0], 10) >= 5; // e.g. "58012" -> true, "48008" -> false
+    return parseInt(parts[1][0], 10) >= 5; // e.g. 500, 58012
 }
 
-// Populate search datalist respecting the Grad Course toggle
+function isFreshmanCourse(courseCode) {
+    const parts = courseCode.split(' ');
+    if (parts.length < 2) return false;
+    return parseInt(parts[1][0], 10) === 1; // e.g. 101, 102
+}
+
 function populateDatalist() {
     datalist.innerHTML = '';
     const hideGrad = hideGradCheckbox.checked;
+    const hideFresh = hideFreshmanCheckbox.checked;
 
     allCourses.forEach(course => {
         if (hideGrad && isGradCourse(course.code)) return;
+        if (hideFresh && isFreshmanCourse(course.code)) return;
+        if (takenCoursesSet.has(course.code)) return; 
+
         const option = document.createElement('option');
         option.value = `${course.code} ${course.name}`;
         datalist.appendChild(option);
     });
 }
 
+function updateExcludedUI() {
+    const hideGrad = hideGradCheckbox.checked;
+    const hideFresh = hideFreshmanCheckbox.checked;
+
+    excludedList.innerHTML = '';
+    let excludedCount = 0;
+
+    allCourses.forEach(course => {
+        let isExcluded = false;
+        let reason = '';
+
+        if (takenCoursesSet.has(course.code)) {
+            isExcluded = true;
+            reason = 'Taken';
+        } else if (hideGrad && isGradCourse(course.code)) {
+            isExcluded = true;
+            reason = 'Grad Level';
+        } else if (hideFresh && isFreshmanCourse(course.code)) {
+            isExcluded = true;
+            reason = 'Freshman Level';
+        }
+
+        if (isExcluded) {
+            excludedCount++;
+            const span = document.createElement('span');
+            span.className = 'excluded-tag';
+            span.innerHTML = `<strong>${course.code}</strong>&nbsp;(${reason})`;
+            excludedList.appendChild(span);
+        }
+    });
+
+    if (excludedCount === 0) {
+        excludedList.innerHTML = '<p class="empty-msg" style="margin:0; font-size:13px; color:#777;">No courses excluded.</p>';
+    }
+}
+
 hideGradCheckbox.addEventListener('change', () => {
     populateDatalist();
-    // Auto-trigger recommendation refresh if list is currently populated
+    updateExcludedUI();
     if (currentRecommendations.length > 0) recommendBtn.click();
 });
 
-// --- Taken Courses Logic ---
+hideFreshmanCheckbox.addEventListener('change', () => {
+    populateDatalist();
+    updateExcludedUI();
+    if (currentRecommendations.length > 0) recommendBtn.click();
+});
+
 addTakenBtn.addEventListener('click', () => {
     const val = takenSearch.value.trim().toUpperCase();
     const course = allCourses.find(c => val.startsWith(c.code.toUpperCase()));
@@ -95,6 +146,8 @@ addTakenBtn.addEventListener('click', () => {
         takenCoursesSet.add(course.code);
         takenSearch.value = '';
         renderTakenCourses();
+        populateDatalist();
+        updateExcludedUI();
     }
 });
 
@@ -111,9 +164,11 @@ function renderTakenCourses() {
 window.removeTaken = function(code) {
     takenCoursesSet.delete(code);
     renderTakenCourses();
+    populateDatalist();
+    updateExcludedUI();
+    if (currentRecommendations.length > 0) recommendBtn.click();
 };
 
-// --- Schedule Conflict Logic ---
 function getOccupiedSlots(coursesArray) {
     let occupied = new Set();
     coursesArray.forEach(courseBundle => {
@@ -163,7 +218,6 @@ function getTypeName(typeCode) {
     return "Other";
 }
 
-// --- Initiating Course Add (Opening Modal) ---
 addBtn.addEventListener('click', () => {
     errorMsg.textContent = '';
     const val = searchInput.value.trim().toUpperCase();
@@ -210,7 +264,6 @@ addBtn.addEventListener('click', () => {
     modal.style.display = 'flex';
 });
 
-// --- Modal Confirm Button Logic ---
 confirmBtn.addEventListener('click', () => {
     const dropdowns = document.querySelectorAll('.section-dropdown');
     let sectionsToAdd = [];
@@ -263,7 +316,6 @@ confirmBtn.addEventListener('click', () => {
 closeModal.onclick = () => modal.style.display = "none";
 window.onclick = (event) => { if (event.target == modal) modal.style.display = "none"; }
 
-// --- Updating the UI Grid ---
 function updateTimetableUI() {
     countSpan.textContent = selectedCourses.length;
     
@@ -304,19 +356,17 @@ function removeCourse(index) {
     recList.innerHTML = '<p>Select courses and click "Recommend" to see non-conflicting options here.</p>';
 }
 
-// --- Recommendations and Filtering ---
 let currentRecommendations = [];
 
 recommendBtn.addEventListener('click', () => {
     currentRecommendations = [];
     const hideGrad = hideGradCheckbox.checked;
+    const hideFresh = hideFreshmanCheckbox.checked;
 
     allCourses.forEach(course => {
-        // Skip hidden courses
         if (hideGrad && isGradCourse(course.code)) return;
-        // Skip if marked as Taken
+        if (hideFresh && isFreshmanCourse(course.code)) return;
         if (takenCoursesSet.has(course.code)) return;
-        // Skip if currently in Timetable
         if (selectedCourses.some(c => c.code === course.code)) return;
 
         let currentOccupied = getOccupiedSlots(selectedCourses);
