@@ -30,7 +30,6 @@ body {
 
 .left-pane { flex: 2; }
 .right-pane { flex: 1; overflow-y: auto; }
-
 .selection-area, .filter-area {
     display: flex;
     gap: 10px;
@@ -253,14 +252,21 @@ hr {
     color: #333;
 }
 
+.recommendations-list {
+    max-height: 50vh; /* Limits the height to 50% of the screen */
+    overflow-y: auto; /* Adds the scrollbar when needed */
+    background: #fdfdfd;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 15px;
+}
 
 /* --- Dark Theme --- */
 body.dark-mode {
     background-color: #121212;
     color: #e0e0e0;
 }
-body.dark-mode .left-pane, body.dark-mode .right-pane, body.dark-mode .modal-content, body.dark-mode .excluded-section {
-    background-color: #1e1e1e;
+body.dark-mode .left-pane, body.dark-mode .right-pane, body.dark-mode .modal-content, body.dark-mode .excluded-section, body.dark-mode .recommendations-list {    background-color: #1e1e1e;
     border-color: #333;
     box-shadow: 0 4px 6px rgba(0,0,0,0.5);
 }
