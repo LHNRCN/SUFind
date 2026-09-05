@@ -1,6 +1,6 @@
 let allCourses = [];
 let selectedCourses = []; // Stores up to 5 course bundles
-const MAX_COURSES = 5;
+const MAX_COURSES = 6;
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
 
 // DOM Elements
