@@ -1,0 +1,43 @@
+name: Daily Course Data Scraper
+
+# This decides WHEN the script runs
+on:
+  schedule:
+    # Runs at 04:00 UTC every day (07:00 AM in Turkey time)
+    - cron: '0 4 * * *'
+  # Allows you to trigger the run manually from the GitHub Actions tab
+  workflow_dispatch:
+
+# Ensure the action has permission to commit back to the repository
+permissions:
+  contents: write
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        # Updated to point inside the scraper folder
+        run: pip install -r scraper/requirements.txt
+
+      - name: Run Scraper
+        # Updated to run the script inside the scraper folder.
+        # Note: Ensure the Python file inside that folder is actually named 'scraper.py'. 
+        run: python scraper/scrape.py 202601 
+
+      - name: Commit and push if data changed
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add data.min.json
+          # If there are no changes, do nothing. If there are, commit and push.
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update course data" && git push)
