@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Scheduler & Recommender</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="left-pane">
+            <h2>My Timetable</h2>
+            
+            <div class="selection-area">
+                <input type="text" id="course-search" placeholder="Search course (e.g. CS 201)" list="course-list">
+                <datalist id="course-list"></datalist>
+                <button id="add-course-btn">Add Course</button>
+                <p class="error-msg" id="error-msg"></p>
+                <p>Selected: <span id="course-count">0</span>/5</p>
+            </div>
+
+            <div class="timetable" id="timetable">
+                <div class="time-header">Time / Day</div>
+                <div class="day-header">Mon</div>
+                <div class="day-header">Tue</div>
+                <div class="day-header">Wed</div>
+                <div class="day-header">Thu</div>
+                <div class="day-header">Fri</div>
+                </div>
+            
+            <button id="recommend-btn" class="primary-btn">Recommend Non-Conflicting Courses</button>
+        </div>
+
+        <div class="right-pane">
+            <h2>Recommended Courses</h2>
+            <div class="filter-area">
+                <input type="text" id="filter-input" placeholder="Filter by code (e.g. MATH)">
+            </div>
+            <div class="recommendations-list" id="recommendations-list">
+                <p>Select courses and click "Recommend" to see non-conflicting options here.</p>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
