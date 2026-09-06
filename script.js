@@ -3,6 +3,8 @@ let selectedCourses = [];
 let takenCoursesSet = new Set(); 
 let manuallyExcludedSet = new Set(); 
 let candidateCoursesSet = new Set(); 
+let blockedSlots = new Set(); 
+let isBlockingMode = false;
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
 const TIMES = [
@@ -30,6 +32,7 @@ const recommendBtn = document.getElementById('recommend-btn');
 const filterInput = document.getElementById('filter-input');
 const recList = document.getElementById('recommendations-list');
 const themeToggleBtn = document.getElementById('theme-toggle');
+const blockHoursBtn = document.getElementById('block-hours-btn');
 
 // Modal Elements
 const modal = document.getElementById('section-modal');
@@ -44,7 +47,6 @@ let coursePendingAdd = null;
 // Dark Mode Toggle
 themeToggleBtn.addEventListener('click', () => {
     document.body.classList.toggle('dark-mode');
-    
     const themeIcon = document.getElementById('theme-icon');
     if (document.body.classList.contains('dark-mode')) {
         themeIcon.innerHTML = `
@@ -228,7 +230,7 @@ window.manuallyExclude = function(code) {
     manuallyExcludedSet.add(code);
     populateDatalist();
     updateExcludedUI();
-    if (currentRecommendations.length > 0) recommendBtn.click();
+    recommendBtn.click();
 };
 
 window.removeExcluded = function(code) {
@@ -250,8 +252,46 @@ window.removeCandidate = function(code) {
     if (currentRecommendations.length > 0) recommendBtn.click();
 };
 
+// --- Block Hours Logic ---
+blockHoursBtn.addEventListener('click', () => {
+    isBlockingMode = !isBlockingMode;
+    if (isBlockingMode) {
+        blockHoursBtn.textContent = "Done Blocking";
+        blockHoursBtn.classList.replace("secondary-btn", "primary-btn");
+        timetable.classList.add("blocking-mode");
+    } else {
+        blockHoursBtn.textContent = "Block Hours";
+        blockHoursBtn.classList.replace("primary-btn", "secondary-btn");
+        timetable.classList.remove("blocking-mode");
+        if (currentRecommendations.length > 0) recommendBtn.click();
+    }
+});
+
+timetable.addEventListener('click', (e) => {
+    if (!isBlockingMode) return; 
+    
+    const cell = e.target.closest('div[id^="cell-"]');
+    if (!cell) return;
+    
+    if (cell.classList.contains('course-block')) {
+        alert("Cannot block a slot that already has a scheduled course.");
+        return;
+    }
+
+    const slotId = cell.id.replace('cell-', ''); 
+    
+    if (blockedSlots.has(slotId)) {
+        blockedSlots.delete(slotId);
+        cell.classList.remove('blocked-cell');
+    } else {
+        blockedSlots.add(slotId);
+        cell.classList.add('blocked-cell');
+    }
+});
+
+// Incorporates blockedSlots into recommendations logic
 function getOccupiedSlots(coursesArray) {
-    let occupied = new Set();
+    let occupied = new Set(blockedSlots); 
     coursesArray.forEach(courseBundle => {
         courseBundle.sections.forEach(sec => {
             sec.schedule.forEach(sch => {
@@ -380,7 +420,7 @@ confirmBtn.addEventListener('click', () => {
     }
     
     if (externalConflict) {
-        modalError.textContent = "Error: A selected section conflicts with your current timetable.";
+        modalError.textContent = "Error: A selected section conflicts with your current timetable or blocked hours.";
         return;
     }
 
@@ -394,7 +434,6 @@ confirmBtn.addEventListener('click', () => {
     modal.style.display = 'none';
     updateTimetableUI();
     
-    // Automatically remove from candidates if it was added to timetable
     if (candidateCoursesSet.has(coursePendingAdd.code)) {
         candidateCoursesSet.delete(coursePendingAdd.code);
         updateCandidateUI();
@@ -414,6 +453,9 @@ function updateTimetableUI() {
                 cell.innerHTML = '';
                 cell.className = '';
                 cell.style.backgroundColor = '';
+                if (blockedSlots.has(`${day}-${slot}`)) {
+                    cell.classList.add('blocked-cell');
+                }
             }
         }
     }
@@ -426,6 +468,7 @@ function updateTimetableUI() {
                         const cell = document.getElementById(`cell-${sch.day}-${sch.start + i}`);
                         if (cell) {
                             cell.className = 'course-block';
+                            cell.classList.remove('blocked-cell'); // Override block styling if forced
                             cell.style.backgroundColor = courseBundle.color;
                             cell.style.color = '#000'; 
                             cell.innerHTML = `
@@ -457,7 +500,7 @@ recommendBtn.addEventListener('click', () => {
         if (hideGrad && isGradCourse(course.code)) return;
         if (takenCoursesSet.has(course.code)) return;
         if (manuallyExcludedSet.has(course.code)) return;
-        if (candidateCoursesSet.has(course.code)) return; // Exclude pinned candidates from the general recommendation view
+        if (candidateCoursesSet.has(course.code)) return; 
         if (selectedCourses.some(c => c.code === course.code)) return;
 
         let currentOccupied = getOccupiedSlots(selectedCourses);
@@ -505,12 +548,10 @@ function renderRecommendations() {
         div.style.justifyContent = 'space-between';
         div.style.alignItems = 'center';
         
-        // Grab the CRN from the first section of the first class type
         let crn = "00000";
         if (course.classes.length > 0 && course.classes[0].sections.length > 0) {
             crn = course.classes[0].sections[0].crn;
         }
-        
         const bannerUrl = `https://suis.sabanciuniv.edu/prod/bwckschd.p_disp_detail_sched?term_in=202601&crn_in=${crn}`;
         
         div.innerHTML = `

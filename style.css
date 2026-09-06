@@ -199,8 +199,15 @@ hr {
     cursor: pointer;
     font-weight: bold;
 }
-
 .candidate-btn:hover { background-color: #138496; }
+
+/* --- Block Hours & Timetable Header --- */
+.timetable-header-area {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
 
 /* Timetable Grid */
 .timetable {
@@ -242,8 +249,27 @@ hr {
 }
 
 .course-block:hover { filter: brightness(0.9); }
-
 .course-block strong { font-size: 12px; }
+
+/* Blocked Cells */
+.blocked-cell {
+    background: repeating-linear-gradient(
+        45deg,
+        #f0f0f0,
+        #f0f0f0 10px,
+        #e0e0e0 10px,
+        #e0e0e0 20px
+    ) !important;
+    cursor: pointer;
+}
+
+.timetable.blocking-mode > div:not(.time-header):not(.day-header):not(.time-label):not(.course-block) {
+    cursor: crosshair;
+}
+
+.timetable.blocking-mode > div:not(.time-header):not(.day-header):not(.time-label):not(.course-block):hover {
+    background-color: #fdd;
+}
 
 /* Recommendations */
 .recommendations-list {
@@ -264,6 +290,15 @@ hr {
     margin: 0;
     font-size: 14px;
     color: #666;
+}
+
+/* --- Course Link Styling --- */
+.course-link {
+    color: #0056b3;
+    text-decoration: none;
+}
+.course-link:hover {
+    text-decoration: underline;
 }
 
 /* Modal */
@@ -318,20 +353,6 @@ hr {
     color: #333;
 }
 
-/* --- Course Link Styling --- */
-.course-link {
-    color: #0056b3;
-    text-decoration: none;
-}
-
-.course-link:hover {
-    text-decoration: underline;
-}
-
-/* Dark Mode Override for Links */
-body.dark-mode .course-link {
-    color: #66b2ff;
-}
 
 /* --- Dark Theme --- */
 body.dark-mode {
@@ -363,17 +384,26 @@ body.dark-mode .timetable > div {
 body.dark-mode .time-header, body.dark-mode .day-header, body.dark-mode .time-label {
     background-color: #2a2a2a !important;
 }
-body.dark-mode .rec-item {
-    border-bottom: 1px solid #333;
-}
-body.dark-mode .rec-item p {
-    color: #aaa;
-}
-body.dark-mode hr {
-    background: #333;
-}
+body.dark-mode .rec-item { border-bottom: 1px solid #333; }
+body.dark-mode .rec-item p { color: #aaa; }
+body.dark-mode hr { background: #333; }
 body.dark-mode .candidate-tag {
     background-color: #17a2b8;
     color: #fff;
     border-color: #138496;
+}
+body.dark-mode .blocked-cell {
+    background: repeating-linear-gradient(
+        45deg,
+        #333,
+        #333 10px,
+        #2a2a2a 10px,
+        #2a2a2a 20px
+    ) !important;
+}
+body.dark-mode .timetable.blocking-mode > div:not(.time-header):not(.day-header):not(.time-label):not(.course-block):hover {
+    background-color: #522;
+}
+body.dark-mode .course-link {
+    color: #66b2ff;
 }

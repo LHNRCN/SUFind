@@ -34,7 +34,11 @@
 
             <hr>
 
-            <h2>My Timetable</h2>
+            <div class="timetable-header-area">
+                <h2 style="margin: 0;">My Timetable</h2>
+                <button id="block-hours-btn" class="secondary-btn">Block Hours</button>
+            </div>
+            
             <div class="selection-area">
                 <input type="text" id="course-search" placeholder="Search course (e.g. CS 201)" list="course-list">
                 <datalist id="course-list"></datalist>
@@ -56,7 +60,7 @@
             <button id="recommend-btn" class="primary-btn">Recommend Non-Conflicting Courses</button>
         </div>
 
-        <!-- Right Pane: Recommendations & Excluded -->
+        <!-- Right Pane: Recommendations, Candidates & Excluded -->
         <div class="right-pane">
             
             <div class="excluded-section">
