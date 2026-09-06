@@ -505,9 +505,17 @@ function renderRecommendations() {
         div.style.justifyContent = 'space-between';
         div.style.alignItems = 'center';
         
+        // Grab the CRN from the first section of the first class type
+        let crn = "00000";
+        if (course.classes.length > 0 && course.classes[0].sections.length > 0) {
+            crn = course.classes[0].sections[0].crn;
+        }
+        
+        const bannerUrl = `https://suis.sabanciuniv.edu/prod/bwckschd.p_disp_detail_sched?term_in=202601&crn_in=${crn}`;
+        
         div.innerHTML = `
             <div>
-                <h4>${course.code}</h4>
+                <h4><a href="${bannerUrl}" target="_blank" class="course-link">${course.code}</a></h4>
                 <p>${course.name}</p>
             </div>
             <div style="display: flex; gap: 5px;">

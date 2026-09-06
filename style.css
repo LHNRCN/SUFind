@@ -318,6 +318,20 @@ hr {
     color: #333;
 }
 
+/* --- Course Link Styling --- */
+.course-link {
+    color: #0056b3;
+    text-decoration: none;
+}
+
+.course-link:hover {
+    text-decoration: underline;
+}
+
+/* Dark Mode Override for Links */
+body.dark-mode .course-link {
+    color: #66b2ff;
+}
 
 /* --- Dark Theme --- */
 body.dark-mode {
