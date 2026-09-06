@@ -2,6 +2,7 @@ let allCourses = [];
 let selectedCourses = []; 
 let takenCoursesSet = new Set(); 
 let manuallyExcludedSet = new Set(); 
+let candidateCoursesSet = new Set(); 
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
 const TIMES = [
@@ -19,6 +20,7 @@ const addBtn = document.getElementById('add-course-btn');
 const addTakenBtn = document.getElementById('add-taken-btn');
 const takenList = document.getElementById('taken-list');
 const excludedList = document.getElementById('excluded-list');
+const candidateList = document.getElementById('candidate-list');
 const hideGradCheckbox = document.getElementById('hide-grad-cb');
 const hideFreshmanCheckbox = document.getElementById('hide-freshman-cb');
 const errorMsg = document.getElementById('error-msg');
@@ -42,9 +44,25 @@ let coursePendingAdd = null;
 // Dark Mode Toggle
 themeToggleBtn.addEventListener('click', () => {
     document.body.classList.toggle('dark-mode');
+    
+    const themeIcon = document.getElementById('theme-icon');
+    if (document.body.classList.contains('dark-mode')) {
+        themeIcon.innerHTML = `
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        `;
+    } else {
+        themeIcon.innerHTML = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
+    }
 });
 
-// Random Pastel Color Generator for the Grid
 function getRandomPastelColor() {
     const hue = Math.floor(Math.random() * 360);
     return `hsl(${hue}, 70%, 85%)`;
@@ -138,6 +156,21 @@ function updateExcludedUI() {
     }
 }
 
+function updateCandidateUI() {
+    candidateList.innerHTML = '';
+    if (candidateCoursesSet.size === 0) {
+        candidateList.innerHTML = '<p class="empty-msg" style="margin:0; font-size:13px; color:#777;">No candidate courses pinned.</p>';
+        return;
+    }
+
+    candidateCoursesSet.forEach(code => {
+        const span = document.createElement('span');
+        span.className = 'candidate-tag';
+        span.innerHTML = `<strong>${code}</strong> <span class="remove-tag" onclick="removeCandidate('${code}')" style="margin-left:5px; cursor:pointer;">&times;</span>`;
+        candidateList.appendChild(span);
+    });
+}
+
 hideGradCheckbox.addEventListener('change', () => {
     populateDatalist();
     updateExcludedUI();
@@ -156,6 +189,7 @@ hideFreshmanCheckbox.addEventListener('change', (e) => {
     }
     renderTakenCourses();
     populateDatalist();
+    updateExcludedUI();
     if (currentRecommendations.length > 0) recommendBtn.click();
 });
 
@@ -168,6 +202,7 @@ addTakenBtn.addEventListener('click', () => {
         takenSearch.value = '';
         renderTakenCourses();
         populateDatalist();
+        updateExcludedUI();
     }
 });
 
@@ -185,6 +220,7 @@ window.removeTaken = function(code) {
     takenCoursesSet.delete(code);
     renderTakenCourses();
     populateDatalist();
+    updateExcludedUI();
     if (currentRecommendations.length > 0) recommendBtn.click();
 };
 
@@ -192,13 +228,25 @@ window.manuallyExclude = function(code) {
     manuallyExcludedSet.add(code);
     populateDatalist();
     updateExcludedUI();
-    recommendBtn.click();
+    if (currentRecommendations.length > 0) recommendBtn.click();
 };
 
 window.removeExcluded = function(code) {
     manuallyExcludedSet.delete(code);
     populateDatalist();
     updateExcludedUI();
+    if (currentRecommendations.length > 0) recommendBtn.click();
+};
+
+window.addCandidate = function(code) {
+    candidateCoursesSet.add(code);
+    updateCandidateUI();
+    if (currentRecommendations.length > 0) recommendBtn.click();
+};
+
+window.removeCandidate = function(code) {
+    candidateCoursesSet.delete(code);
+    updateCandidateUI();
     if (currentRecommendations.length > 0) recommendBtn.click();
 };
 
@@ -339,12 +387,18 @@ confirmBtn.addEventListener('click', () => {
     selectedCourses.push({
         code: coursePendingAdd.code,
         sections: sectionsToAdd,
-        color: getRandomPastelColor() // Attach random color
+        color: getRandomPastelColor()
     });
     
     searchInput.value = '';
     modal.style.display = 'none';
     updateTimetableUI();
+    
+    // Automatically remove from candidates if it was added to timetable
+    if (candidateCoursesSet.has(coursePendingAdd.code)) {
+        candidateCoursesSet.delete(coursePendingAdd.code);
+        updateCandidateUI();
+    }
 });
 
 closeModal.onclick = () => modal.style.display = "none";
@@ -373,7 +427,7 @@ function updateTimetableUI() {
                         if (cell) {
                             cell.className = 'course-block';
                             cell.style.backgroundColor = courseBundle.color;
-                            cell.style.color = '#000'; // Enforce contrast on pastel
+                            cell.style.color = '#000'; 
                             cell.innerHTML = `
                                 <strong>${courseBundle.code}</strong>
                                 <span>${sec.displayType} (${sec.group})</span>
@@ -403,6 +457,7 @@ recommendBtn.addEventListener('click', () => {
         if (hideGrad && isGradCourse(course.code)) return;
         if (takenCoursesSet.has(course.code)) return;
         if (manuallyExcludedSet.has(course.code)) return;
+        if (candidateCoursesSet.has(course.code)) return; // Exclude pinned candidates from the general recommendation view
         if (selectedCourses.some(c => c.code === course.code)) return;
 
         let currentOccupied = getOccupiedSlots(selectedCourses);
@@ -455,7 +510,10 @@ function renderRecommendations() {
                 <h4>${course.code}</h4>
                 <p>${course.name}</p>
             </div>
-            <button class="exclude-btn" onclick="manuallyExclude('${course.code}')">Exclude</button>
+            <div style="display: flex; gap: 5px;">
+                <button class="candidate-btn" onclick="addCandidate('${course.code}')">Pin</button>
+                <button class="exclude-btn" onclick="manuallyExclude('${course.code}')">Exclude</button>
+            </div>
         `;
         recList.appendChild(div);
     });

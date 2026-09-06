@@ -13,7 +13,12 @@
             
             <!-- Top Controls: Theme, Taken Courses & Filters -->
             <div class="top-controls">
-                <button id="theme-toggle" class="secondary-btn" style="margin-bottom: 15px;">Toggle Dark Mode</button>
+                <button id="theme-toggle" class="icon-btn" aria-label="Toggle Dark Mode" title="Toggle Dark Mode">
+                    <!-- Default Moon Icon -->
+                    <svg id="theme-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
                 
                 <div class="selection-area">
                     <input type="text" id="taken-search" placeholder="Mark course as taken (e.g. IF 100)" list="course-list">
@@ -67,6 +72,14 @@
             </div>
             <div class="recommendations-list" id="recommendations-list">
                 <p>Select courses and click "Recommend" to see non-conflicting options here.</p>
+            </div>
+
+            <!-- Candidate Courses Section -->
+            <div class="candidate-section" style="margin-top: 20px;">
+                <h3 style="margin-top: 0;">Candidate Courses</h3>
+                <div id="candidate-list" class="tags-container" style="max-height: 150px; overflow-y: auto;">
+                    <p class="empty-msg" style="margin:0; font-size:13px; color:#777;">No candidate courses pinned.</p>
+                </div>
             </div>
         </div>
     </div>

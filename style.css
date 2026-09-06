@@ -16,7 +16,7 @@ body {
     gap: 20px;
     max-width: 1400px;
     margin: 0 auto;
-    min-height: 90vh; /* Fixed layout clipping issue */
+    min-height: 90vh; 
 }
 
 .left-pane, .right-pane {
@@ -30,6 +30,7 @@ body {
 
 .left-pane { flex: 2; }
 .right-pane { flex: 1; overflow-y: auto; }
+
 .selection-area, .filter-area {
     display: flex;
     gap: 10px;
@@ -66,6 +67,29 @@ button:hover { background-color: #004494; }
     background-color: #28a745;
 }
 .primary-btn:hover { background-color: #218838; }
+
+/* --- Theme Toggle Icon Styling --- */
+.icon-btn {
+    background: none;
+    border: none;
+    color: #333;
+    cursor: pointer;
+    padding: 8px;
+    margin-bottom: 15px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.3s, color 0.3s, transform 0.2s;
+}
+
+.icon-btn:hover {
+    background-color: #e2e3e5;
+    transform: scale(1.1); 
+}
+
+body.dark-mode .icon-btn { color: #e0e0e0; }
+body.dark-mode .icon-btn:hover { background-color: #333; }
 
 .error-msg {
     color: red;
@@ -113,6 +137,7 @@ hr {
     font-weight: bold;
 }
 
+/* Excluded Courses Styling */
 .excluded-section {
     background: #fdfdfd;
     border: 1px solid #e9ecef;
@@ -142,6 +167,40 @@ hr {
     font-weight: bold;
 }
 .exclude-btn:hover { background-color: #c82333; }
+
+/* --- Candidate Courses Styling --- */
+.candidate-section {
+    background: #fdfdfd;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 15px;
+}
+
+.candidate-tag {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid #bee5eb;
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+
+.candidate-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+    background-color: #17a2b8; 
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.candidate-btn:hover { background-color: #138496; }
 
 /* Timetable Grid */
 .timetable {
@@ -182,13 +241,20 @@ hr {
     border: 1px solid rgba(0,0,0,0.1);
 }
 
-.course-block:hover {
-    filter: brightness(0.9);
-}
+.course-block:hover { filter: brightness(0.9); }
 
 .course-block strong { font-size: 12px; }
 
 /* Recommendations */
+.recommendations-list {
+    max-height: 50vh; 
+    overflow-y: auto; 
+    background: #fdfdfd;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 15px;
+}
+
 .rec-item {
     padding: 12px;
     border-bottom: 1px solid #eee;
@@ -252,21 +318,19 @@ hr {
     color: #333;
 }
 
-.recommendations-list {
-    max-height: 50vh; /* Limits the height to 50% of the screen */
-    overflow-y: auto; /* Adds the scrollbar when needed */
-    background: #fdfdfd;
-    border: 1px solid #e9ecef;
-    border-radius: 6px;
-    padding: 15px;
-}
 
 /* --- Dark Theme --- */
 body.dark-mode {
     background-color: #121212;
     color: #e0e0e0;
 }
-body.dark-mode .left-pane, body.dark-mode .right-pane, body.dark-mode .modal-content, body.dark-mode .excluded-section, body.dark-mode .recommendations-list {    background-color: #1e1e1e;
+body.dark-mode .left-pane, 
+body.dark-mode .right-pane, 
+body.dark-mode .modal-content, 
+body.dark-mode .excluded-section, 
+body.dark-mode .recommendations-list,
+body.dark-mode .candidate-section {
+    background-color: #1e1e1e;
     border-color: #333;
     box-shadow: 0 4px 6px rgba(0,0,0,0.5);
 }
@@ -293,4 +357,9 @@ body.dark-mode .rec-item p {
 }
 body.dark-mode hr {
     background: #333;
+}
+body.dark-mode .candidate-tag {
+    background-color: #17a2b8;
+    color: #fff;
+    border-color: #138496;
 }
