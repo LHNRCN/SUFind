@@ -1,213 +1,85 @@
-let allCourses = [];
-let selectedSections = []; // Will store up to 5 section objects
-const MAX_COURSES = 5;
+import requests
+from bs4 import BeautifulSoup
+import json
 
-// DOM Elements
-const searchInput = document.getElementById('course-search');
-const datalist = document.getElementById('course-list');
-const addBtn = document.getElementById('add-course-btn');
-const errorMsg = document.getElementById('error-msg');
-const countSpan = document.getElementById('course-count');
-const timetable = document.getElementById('timetable');
-const recommendBtn = document.getElementById('recommend-btn');
-const filterInput = document.getElementById('filter-input');
-const recList = document.getElementById('recommendations-list');
+# Sabancı University BannerWeb Endpoints
+BASE_URL = "https://suis.sabanciuniv.edu/prod/"
+SEARCH_URL = BASE_URL + "bwckschd.p_get_crse_unsec"
 
-// Initialize Timetable Grid (11 slots, Mon-Fri)
-function initTimetable() {
-    for (let slot = 0; slot < 11; slot++) {
-        // Add time label
-        const timeLabel = document.createElement('div');
-        timeLabel.className = 'time-label';
-        timeLabel.textContent = `Slot ${slot}`;
-        timetable.appendChild(timeLabel);
-
-        // Add 5 empty cells for Mon-Fri
-        for (let day = 0; day < 5; day++) {
-            const cell = document.createElement('div');
-            cell.id = `cell-${day}-${slot}`;
-            timetable.appendChild(cell);
-        }
-    }
-}
-
-// Fetch Data
-fetch('data.min.json')
-    .then(response => response.json())
-    .then(data => {
-        allCourses = data.courses;
-        populateDatalist();
-    });
-
-function populateDatalist() {
-    allCourses.forEach(course => {
-        const option = document.createElement('option');
-        option.value = `${course.code} ${course.name}`;
-        datalist.appendChild(option);
-    });
-}
-
-// --- Schedule Conflict Logic ---
-
-function getOccupiedSlots(sectionsArray) {
-    let occupied = new Set();
-    sectionsArray.forEach(sec => {
-        sec.schedule.forEach(sch => {
-            // Check if valid day (0-4 is Mon-Fri) and valid duration
-            if (sch.day >= 0 && sch.day <= 4 && sch.duration > 0) {
-                for (let i = 0; i < sch.duration; i++) {
-                    occupied.add(`${sch.day}-${sch.start + i}`);
-                }
-            }
-        });
-    });
-    return occupied;
-}
-
-function hasConflict(candidateSchedule, currentOccupiedSet) {
-    for (let sch of candidateSchedule) {
-        if (sch.day >= 0 && sch.day <= 4 && sch.duration > 0) {
-            for (let i = 0; i < sch.duration; i++) {
-                if (currentOccupiedSet.has(`${sch.day}-${sch.start + i}`)) {
-                    return true; // Conflict found
-                }
-            }
-        }
-    }
-    return false;
-}
-
-// --- Adding and Rendering Courses ---
-
-addBtn.addEventListener('click', () => {
-    errorMsg.textContent = '';
-
-    if (selectedSections.length >= MAX_COURSES) {
-        errorMsg.textContent = "You can only select up to 5 courses.";
-        return;
+def scrape_banner_data(term_code):
+    """
+    Scrapes course data from Sabancı University BannerWeb.
+    """
+    # Standard payload to query the dynamic schedule
+    payload = {
+        "term_in": term_code,
+        "sel_subj": ["dummy", "CS", "MATH", "IF", "SPS", "NS", "PROJ", "ECON", "EE"], 
+        "sel_day": "dummy",
+        "sel_schd": "dummy",
+        "sel_insm": "dummy",
+        "sel_camp": "dummy",
+        "sel_levl": "dummy",
+        "sel_sess": "dummy",
+        "sel_instr": "dummy",
+        "sel_ptrm": "dummy",
+        "sel_attr": "dummy",
+        "sel_crse": "",
+        "sel_title": "",
+        "sel_from_cred": "",
+        "sel_to_cred": "",
+        "begin_hh": "0",
+        "begin_mi": "0",
+        "begin_ap": "a",
+        "end_hh": "0",
+        "end_mi": "0",
+        "end_ap": "a"
     }
 
-    const val = searchInput.value.trim();
-
-    // Find the course whose code matches the beginning of the input
-    const course = allCourses.find(c => val.startsWith(c.code));
-
-    if (!course) {
-        errorMsg.textContent = "Course not found.";
-        return;
-    }
-
-    // Grab the first section of the first class type for simplicity
-    const sectionToadd = course.classes[0].sections[0];
-
-    // Check internal conflict before adding
-    const currentOccupied = getOccupiedSlots(selectedSections);
-    if (hasConflict(sectionToadd.schedule, currentOccupied)) {
-        errorMsg.textContent = "This course conflicts with your timetable!";
-        return;
-    }
-
-    // Attach course code to the section object for easy rendering
-    sectionToadd.displayCode = course.code;
-    selectedSections.push(sectionToadd);
-
-    searchInput.value = '';
-    updateTimetableUI();
-});
-
-function updateTimetableUI() {
-    countSpan.textContent = selectedSections.length;
-
-    // Clear timetable cells
-    for (let day = 0; day < 5; day++) {
-        for (let slot = 0; slot < 11; slot++) {
-            const cell = document.getElementById(`cell-${day}-${slot}`);
-            cell.innerHTML = '';
-            cell.className = '';
-        }
-    }
-
-    // Draw selected courses
-    selectedSections.forEach((sec, index) => {
-        sec.schedule.forEach(sch => {
-            if (sch.day >= 0 && sch.day <= 4 && sch.duration > 0) {
-                for (let i = 0; i < sch.duration; i++) {
-                    const cell = document.getElementById(`cell-${sch.day}-${sch.start + i}`);
-                    if (cell) {
-                        cell.className = 'course-block';
-                        cell.innerHTML = `<span>${sec.displayCode}</span>`;
-                        // Click to remove
-                        cell.onclick = () => removeCourse(index);
+    print(f"Fetching course list for term {term_code}...")
+    
+    try:
+        response = requests.post(SEARCH_URL, data=payload)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        # ---------------------------------------------------------
+        # TODO: Insert the specific HTML parsing logic from suchedule here.
+        # You need to extract the courses and format them to match
+        # the JSON structure below.
+        # ---------------------------------------------------------
+        
+        # Example of the structured output expected by your JavaScript frontend:
+        scraped_courses = [
+            {
+                "name": "Introduction to Computing",
+                "code": "CS 201",
+                "classes": [
+                    {
+                        "type": "",  # "" for Lecture, "R" for Recitation, "L" for Lab
+                        "sections": [
+                            {
+                                "crn": "10218",
+                                "group": "A",
+                                "schedule": [
+                                    {"day": 0, "start": 1, "duration": 2}, # Mon 09:40-11:30
+                                    {"day": 2, "start": 2, "duration": 1}  # Wed 10:40-11:30
+                                ]
+                            }
+                        ]
                     }
-                }
+                ]
             }
-        });
-    });
-}
+        ]
+        
+        # Export to the JSON file your frontend reads
+        with open('data.min.json', 'w', encoding='utf-8') as f:
+            json.dump({"courses": scraped_courses}, f, ensure_ascii=False, separators=(',', ':'))
+        print("Scraping complete. Saved to data.min.json")
+        
+    except Exception as e:
+        print(f"An error occurred during scraping: {e}")
+        exit(1) # Ensure GitHub Actions correctly reports a failure if this crashes
 
-function removeCourse(index) {
-    selectedSections.splice(index, 1);
-    updateTimetableUI();
-    recList.innerHTML = '<p>Select courses and click "Recommend" to see non-conflicting options here.</p>'; // Reset recommendations
-}
-
-// --- Recommendations and Filtering ---
-
-let currentRecommendations = [];
-
-recommendBtn.addEventListener('click', () => {
-    const currentOccupied = getOccupiedSlots(selectedSections);
-    currentRecommendations = [];
-
-    // Look for courses where at least ONE section doesn't conflict
-    allCourses.forEach(course => {
-        // Skip if already in timetable
-        if (selectedSections.some(s => s.displayCode === course.code)) return;
-
-        let hasNonConflictingSection = false;
-
-        course.classes.forEach(cls => {
-            cls.sections.forEach(sec => {
-                if (!hasConflict(sec.schedule, currentOccupied)) {
-                    hasNonConflictingSection = true;
-                }
-            });
-        });
-
-        if (hasNonConflictingSection) {
-            currentRecommendations.push(course);
-        }
-    });
-
-    renderRecommendations();
-});
-
-filterInput.addEventListener('input', renderRecommendations);
-
-function renderRecommendations() {
-    recList.innerHTML = '';
-    const filterText = filterInput.value.trim().toLowerCase();
-
-    const filtered = currentRecommendations.filter(c =>
-        c.code.toLowerCase().includes(filterText) ||
-        c.name.toLowerCase().includes(filterText)
-    );
-
-    if (filtered.length === 0) {
-        recList.innerHTML = '<p>No non-conflicting courses found.</p>';
-        return;
-    }
-
-    filtered.forEach(course => {
-        const div = document.createElement('div');
-        div.className = 'rec-item';
-        div.innerHTML = `
-            <h4>${course.code}</h4>
-            <p>${course.name}</p>
-        `;
-        recList.appendChild(div);
-    });
-}
-
-// Init layout
-initTimetable();
+if __name__ == "__main__":
+    # Run scraper for the desired term code (e.g., 202601 for Fall 2026)
+    scrape_banner_data("202601")
