@@ -279,25 +279,30 @@ class SUcheduleCourseScraper:
             return 5
 
     @staticmethod
+    @staticmethod
     def set_course_time(time: str) -> (int, int):
         """
         Edit course time for json file.
         """
         time = time.split(" - ")
+        
+        # Added the 12th slot times (7:40 pm / 7:00 pm / 8:30 pm) to the end of their respective blocks
         start_list = ['8:40 am', '9:40 am', '10:40 am', '11:40 am', '12:40 pm', '1:40 pm', '2:40 pm', '3:40 pm',
-                      '4:40 pm', '5:40 pm', '6:40 pm', '8:00 am', '9:00 am', '10:00 am', '11:00 am', '12:00 pm',
-                      '1:00 pm', '2:00 pm', '3:00 pm', '4:00 pm', '5:00 pm', '6:00 pm', '9:30 am', '10:30 am',
+                      '4:40 pm', '5:40 pm', '6:40 pm', '7:40 pm', '8:00 am', '9:00 am', '10:00 am', '11:00 am', '12:00 pm',
+                      '1:00 pm', '2:00 pm', '3:00 pm', '4:00 pm', '5:00 pm', '6:00 pm', '7:00 pm', '9:30 am', '10:30 am',
                       '11:30 am', '12:30 pm', '1:30 pm', '2:30 pm', '3:30 pm', '4:30 pm', '5:30 pm', '6:30 pm',
-                      '7:30 pm']
+                      '7:30 pm', '8:30 pm']
+                      
         end_list = ['9:30 am', '10:30 am', '11:30 am', '12:30 pm', '1:30 pm', '2:30 pm', '3:30 pm', '4:30 pm',
-                    '5:30 pm', '6:30 pm', '7:30 pm', '9:00 am', '10:00 am', '11:00 am', '12:00 pm', '1:00 pm',
-                    '2:00 pm', '3:00 pm', '4:00 pm', '5:00 pm', '6:00 pm', '7:00 pm', '10:15 am', '11:15 am',
+                    '5:30 pm', '6:30 pm', '7:30 pm', '8:30 pm', '9:00 am', '10:00 am', '11:00 am', '12:00 pm', '1:00 pm',
+                    '2:00 pm', '3:00 pm', '4:00 pm', '5:00 pm', '6:00 pm', '7:00 pm', '8:00 pm', '10:15 am', '11:15 am',
                     '12:15 pm', '1:15 pm', '2:15 pm', '3:15 pm', '4:15 pm', '5:15 pm', '6:15 pm', '7:15 pm',
-                    '8.15 pm']
+                    '8.15 pm', '9:15 pm']
 
         try:
-            start = start_list.index(time[0]) % 11
-            end = end_list.index(time[1]) % 11
+            # Changed modulo from 11 to 12
+            start = start_list.index(time[0]) % 12
+            end = end_list.index(time[1]) % 12
             duration = end - start + 1 if end >= start else -1
 
         except ValueError:

@@ -213,7 +213,7 @@ hr {
 .timetable {
     display: grid;
     grid-template-columns: 100px repeat(5, 1fr);
-    grid-template-rows: 40px repeat(11, 50px);
+    grid-template-rows: 40px repeat(12, 50px);
     gap: 1px;
     background-color: #ddd;
     border: 1px solid #ccc;

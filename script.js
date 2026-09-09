@@ -11,7 +11,7 @@ const TIMES = [
     "08:40 - 09:30", "09:40 - 10:30", "10:40 - 11:30",
     "11:40 - 12:30", "12:40 - 13:30", "13:40 - 14:30",
     "14:40 - 15:30", "15:40 - 16:30", "16:40 - 17:30",
-    "17:40 - 18:30", "18:40 - 19:30"
+    "17:40 - 18:30", "18:40 - 19:30", "19:40 - 20:30" // Added the 12th slot
 ];
 
 // DOM Elements
@@ -71,7 +71,8 @@ function getRandomPastelColor() {
 }
 
 function initTimetable() {
-    for (let slot = 0; slot < 11; slot++) {
+    // Increased slot limit to 12
+    for (let slot = 0; slot < 12; slot++) {
         const timeLabel = document.createElement('div');
         timeLabel.className = 'time-label';
         timeLabel.textContent = TIMES[slot];
@@ -446,8 +447,9 @@ window.onclick = (event) => { if (event.target == modal) modal.style.display = "
 function updateTimetableUI() {
     countSpan.textContent = selectedCourses.length;
     
+    // Increased slot limit to 12
     for(let day=0; day<5; day++) {
-        for(let slot=0; slot<11; slot++) {
+        for(let slot=0; slot<12; slot++) {
             const cell = document.getElementById(`cell-${day}-${slot}`);
             if(cell) {
                 cell.innerHTML = '';
