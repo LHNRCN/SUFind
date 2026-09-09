@@ -279,7 +279,6 @@ class SUcheduleCourseScraper:
             return 5
 
     @staticmethod
-    @staticmethod
     def set_course_time(time: str) -> (int, int):
         """
         Edit course time for json file.
