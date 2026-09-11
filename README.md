@@ -7,6 +7,4 @@ This project was born out of personal frustration during the course registration
 
 **Acknowledgments**
 The data scraping code (scrape.py) used to automatically fetch course and schedule information from the university's system is taken from the [suchedule](https://github.com/aburakayaz/suchedule) project. Additionally, the basic science credits data (basic_science_credits.jsonl) is taken from the [surriculum](https://github.com/BEFICENT/surriculum) project.
-
-**Project Status**
-⚠️ **Work in Progress:** This project is currently incomplete and remains under active development. Expect bugs, missing features, and ongoing UI/UX adjustments as the core logic is finalized.
+ü
