@@ -73,6 +73,11 @@
             <h2>Recommended Courses</h2>
             <div class="filter-area">
                 <input type="text" id="filter-input" placeholder="Filter by code (e.g. MATH)">
+                <select id="sort-select" class="sort-dropdown">
+                    <option value="default">Default Order</option>
+                    <option value="bs-desc">Basic Science: High to Low</option>
+                    <option value="bs-asc">Basic Science: Low to High</option>
+                </select>
             </div>
             <div class="recommendations-list" id="recommendations-list">
                 <p>Select courses and click "Recommend" to see non-conflicting options here.</p>

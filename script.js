@@ -5,13 +5,14 @@ let manuallyExcludedSet = new Set();
 let candidateCoursesSet = new Set(); 
 let blockedSlots = new Set(); 
 let isBlockingMode = false;
+let basicScienceMap = {}; // Normalised code (e.g. "CS201") -> credits
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
 const TIMES = [
     "08:40 - 09:30", "09:40 - 10:30", "10:40 - 11:30",
     "11:40 - 12:30", "12:40 - 13:30", "13:40 - 14:30",
     "14:40 - 15:30", "15:40 - 16:30", "16:40 - 17:30",
-    "17:40 - 18:30", "18:40 - 19:30", "19:40 - 20:30" // Added the 12th slot
+    "17:40 - 18:30", "18:40 - 19:30", "19:40 - 20:30"
 ];
 
 // DOM Elements
@@ -30,6 +31,7 @@ const countSpan = document.getElementById('course-count');
 const timetable = document.getElementById('timetable');
 const recommendBtn = document.getElementById('recommend-btn');
 const filterInput = document.getElementById('filter-input');
+const sortSelect = document.getElementById('sort-select');
 const recList = document.getElementById('recommendations-list');
 const themeToggleBtn = document.getElementById('theme-toggle');
 const blockHoursBtn = document.getElementById('block-hours-btn');
@@ -70,8 +72,16 @@ function getRandomPastelColor() {
     return `hsl(${hue}, 70%, 85%)`;
 }
 
+function normalizeCode(code) {
+    return (code || "").replace(/\s+/g, '').toUpperCase();
+}
+
+function getBasicScienceCredit(courseCode) {
+    const key = normalizeCode(courseCode);
+    return basicScienceMap.hasOwnProperty(key) ? basicScienceMap[key] : 0;
+}
+
 function initTimetable() {
-    // Increased slot limit to 12
     for (let slot = 0; slot < 12; slot++) {
         const timeLabel = document.createElement('div');
         timeLabel.className = 'time-label';
@@ -86,13 +96,31 @@ function initTimetable() {
     }
 }
 
-fetch('data.min.json')
-    .then(response => response.json())
-    .then(data => {
-        allCourses = data.courses; 
-        populateDatalist();
-        updateExcludedUI();
-    });
+// Load both datasets concurrently
+Promise.all([
+    fetch('data.min.json').then(r => r.json()),
+    fetch('basic_science_credits.jsonl')
+        .then(r => r.text())
+        .then(text => {
+            const lines = text.trim().split('\n');
+            lines.forEach(line => {
+                if (!line) return;
+                try {
+                    const obj = JSON.parse(line);
+                    if (obj.course_id && obj.basic_science !== undefined) {
+                        basicScienceMap[normalizeCode(obj.course_id)] = Number(obj.basic_science) || 0;
+                    }
+                } catch (e) {}
+            });
+        })
+        .catch(() => {
+            console.warn("Could not load basic_science_credits.jsonl file.");
+        })
+]).then(([data]) => {
+    allCourses = data.courses; 
+    populateDatalist();
+    updateExcludedUI();
+});
 
 function isGradCourse(courseCode) {
     const parts = courseCode.split(' ');
@@ -231,7 +259,7 @@ window.manuallyExclude = function(code) {
     manuallyExcludedSet.add(code);
     populateDatalist();
     updateExcludedUI();
-    recommendBtn.click();
+    if (currentRecommendations.length > 0) recommendBtn.click();
 };
 
 window.removeExcluded = function(code) {
@@ -253,7 +281,7 @@ window.removeCandidate = function(code) {
     if (currentRecommendations.length > 0) recommendBtn.click();
 };
 
-// --- Block Hours Logic ---
+// --- Block Hours Mode Logic ---
 blockHoursBtn.addEventListener('click', () => {
     isBlockingMode = !isBlockingMode;
     if (isBlockingMode) {
@@ -290,7 +318,6 @@ timetable.addEventListener('click', (e) => {
     }
 });
 
-// Incorporates blockedSlots into recommendations logic
 function getOccupiedSlots(coursesArray) {
     let occupied = new Set(blockedSlots); 
     coursesArray.forEach(courseBundle => {
@@ -447,7 +474,6 @@ window.onclick = (event) => { if (event.target == modal) modal.style.display = "
 function updateTimetableUI() {
     countSpan.textContent = selectedCourses.length;
     
-    // Increased slot limit to 12
     for(let day=0; day<5; day++) {
         for(let slot=0; slot<12; slot++) {
             const cell = document.getElementById(`cell-${day}-${slot}`);
@@ -470,7 +496,7 @@ function updateTimetableUI() {
                         const cell = document.getElementById(`cell-${sch.day}-${sch.start + i}`);
                         if (cell) {
                             cell.className = 'course-block';
-                            cell.classList.remove('blocked-cell'); // Override block styling if forced
+                            cell.classList.remove('blocked-cell');
                             cell.style.backgroundColor = courseBundle.color;
                             cell.style.color = '#000'; 
                             cell.innerHTML = `
@@ -528,15 +554,24 @@ recommendBtn.addEventListener('click', () => {
 });
 
 filterInput.addEventListener('input', renderRecommendations);
+sortSelect.addEventListener('change', renderRecommendations);
 
 function renderRecommendations() {
     recList.innerHTML = '';
     const filterText = filterInput.value.trim().toLowerCase();
+    const sortMode = sortSelect.value;
 
-    const filtered = currentRecommendations.filter(c => 
+    let filtered = currentRecommendations.filter(c => 
         c.code.toLowerCase().includes(filterText) || 
         c.name.toLowerCase().includes(filterText)
     );
+
+    // Sort by Basic Science Credits
+    if (sortMode === 'bs-desc') {
+        filtered.sort((a, b) => getBasicScienceCredit(b.code) - getBasicScienceCredit(a.code));
+    } else if (sortMode === 'bs-asc') {
+        filtered.sort((a, b) => getBasicScienceCredit(a.code) - getBasicScienceCredit(b.code));
+    }
 
     if (filtered.length === 0) {
         recList.innerHTML = '<p>No non-conflicting courses found.</p>';
@@ -555,10 +590,14 @@ function renderRecommendations() {
             crn = course.classes[0].sections[0].crn;
         }
         const bannerUrl = `https://suis.sabanciuniv.edu/prod/bwckschd.p_disp_detail_sched?term_in=202601&crn_in=${crn}`;
-        
+        const bsCredits = getBasicScienceCredit(course.code);
+
         div.innerHTML = `
             <div>
-                <h4><a href="${bannerUrl}" target="_blank" class="course-link">${course.code}</a></h4>
+                <h4>
+                    <a href="${bannerUrl}" target="_blank" class="course-link">${course.code}</a>
+                    <span class="credit-badge">${bsCredits} BS Credit</span>
+                </h4>
                 <p>${course.name}</p>
             </div>
             <div style="display: flex; gap: 5px;">

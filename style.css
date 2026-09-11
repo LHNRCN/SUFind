@@ -45,6 +45,16 @@ input[type="text"] {
     border-radius: 4px;
 }
 
+.sort-dropdown {
+    padding: 9px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #fff;
+    color: #333;
+    font-size: 13px;
+    cursor: pointer;
+}
+
 button {
     padding: 10px 15px;
     background-color: #0056b3;
@@ -292,6 +302,20 @@ hr {
     color: #666;
 }
 
+/* --- Basic Science Badge Styling --- */
+.credit-badge {
+    display: inline-block;
+    background-color: #e3f2fd;
+    color: #0d47a1;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 2px 7px;
+    border-radius: 10px;
+    margin-left: 6px;
+    vertical-align: middle;
+    border: 1px solid #bbdefb;
+}
+
 /* --- Course Link Styling --- */
 .course-link {
     color: #0056b3;
@@ -353,7 +377,6 @@ hr {
     color: #333;
 }
 
-
 /* --- Dark Theme --- */
 body.dark-mode {
     background-color: #121212;
@@ -369,7 +392,9 @@ body.dark-mode .candidate-section {
     border-color: #333;
     box-shadow: 0 4px 6px rgba(0,0,0,0.5);
 }
-body.dark-mode input[type="text"], body.dark-mode .section-dropdown {
+body.dark-mode input[type="text"], 
+body.dark-mode .section-dropdown,
+body.dark-mode .sort-dropdown {
     background-color: #333;
     color: #e0e0e0;
     border: 1px solid #555;
@@ -406,4 +431,9 @@ body.dark-mode .timetable.blocking-mode > div:not(.time-header):not(.day-header)
 }
 body.dark-mode .course-link {
     color: #66b2ff;
+}
+body.dark-mode .credit-badge {
+    background-color: #102a45;
+    color: #90caf9;
+    border-color: #1e4976;
 }
