@@ -5,5 +5,6 @@ A web-based scheduling tool designed for Sabancı University students. It allows
 **The Inspiration**
 This project was born out of personal frustration during the course registration period; specifically, the tedious trial-and-error process of trying to find a 6th course that perfectly fit into a schedule without conflicting with the 5 courses already selected. 
 
-**Acknowledgments**
-The data scraping code (scrape.py) used to automatically fetch course and schedule information from the university's system is taken from the [suchedule](https://github.com/aburakayaz/suchedule) project. Additionally, the basic science credits data (basic_science_credits.jsonl) is taken from the [surriculum](https://github.com/BEFICENT/surriculum) project.
+## Acknowledgments
+- `scrape.py` is adapted from [suchedule](https://github.com/aburakayaz/suchedule) (MIT License — see LICENSE-suchedule)
+- `basic_science_credits.jsonl` is sourced from [surriculum](https://github.com/BEFICENT/surriculum) (GPL-3.0 License — see LICENSE-surriculum)
