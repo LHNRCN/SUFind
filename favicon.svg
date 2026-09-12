@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Rounded Background Tile -->
+  <rect width="64" height="64" rx="14" fill="#0056b3"/>
+  
+  <!-- Calendar / Timetable Binder Top -->
+  <path d="M12 18 C12 14.7 14.7 12 18 12 L46 12 C49.3 12 52 14.7 52 18 L52 22 L12 22 Z" fill="#003d80"/>
+  
+  <!-- Calendar Rings -->
+  <rect x="20" y="8" width="4" height="8" rx="2" fill="#e2e8f0"/>
+  <rect x="40" y="8" width="4" height="8" rx="2" fill="#e2e8f0"/>
+  
+  <!-- Timetable Inner Body -->
+  <rect x="12" y="22" width="40" height="30" rx="0 0 4 4" fill="#ffffff"/>
+  
+  <!-- Grid / Course Blocks -->
+  <rect x="16" y="26" width="14" height="8" rx="2" fill="#28a745"/>
+  <rect x="34" y="26" width="14" height="8" rx="2" fill="#17a2b8"/>
+  <rect x="16" y="38" width="14" height="10" rx="2" fill="#ffc107"/>
+  <rect x="34" y="38" width="14" height="10" rx="2" fill="#e9ecef"/>
+</svg>
