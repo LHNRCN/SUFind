@@ -370,7 +370,19 @@ function getTypeName(typeCode) {
 addBtn.addEventListener('click', () => {
     errorMsg.textContent = '';
     const val = searchInput.value.trim().toUpperCase();
-    coursePendingAdd = allCourses.find(c => val.startsWith(c.code.toUpperCase()));
+    const valClean = normalizeCode(val);
+
+    // 1. Prioritize an exact code match (handles "EE4801" vs "EE48012" vs "EE48013")
+    coursePendingAdd = allCourses.find(c => normalizeCode(c.code) === valClean);
+
+    // 2. Fallback: Check if the user typed "CODE Name" (e.g. from datalist selection)
+    if (!coursePendingAdd) {
+        coursePendingAdd = allCourses.find(c => {
+            const courseCodeClean = normalizeCode(c.code);
+            return valClean.startsWith(courseCodeClean) && 
+                   (valClean.length === courseCodeClean.length || !/^\d/.test(valClean.slice(courseCodeClean.length)));
+        });
+    }
         
     if (!coursePendingAdd) {
         errorMsg.textContent = "Course not found.";
