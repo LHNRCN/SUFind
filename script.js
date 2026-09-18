@@ -601,7 +601,7 @@ function renderRecommendations() {
         if (course.classes.length > 0 && course.classes[0].sections.length > 0) {
             crn = course.classes[0].sections[0].crn;
         }
-        const bannerUrl = `https://suis.sabanciuniv.edu/prod/bwckschd.p_disp_detail_sched?term_in=202602&crn_in=${crn}`;
+        const bannerUrl = `https://suis.sabanciuniv.edu/prod/bwckschd.p_disp_detail_sched?term_in=202601&crn_in=${crn}`;
         const bsCredits = getBasicScienceCredit(course.code);
 
         div.innerHTML = `
